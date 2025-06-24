@@ -1,0 +1,13 @@
+# Node
+node_modules/
+dist/
+*.log
+*.tsbuildinfo
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

@@ -1,0 +1,24 @@
+{
+	"name": "@osumi/swagger-to-angular",
+	"version": "0.9.0",
+	"description": "Utilidad CLI para generar servicios Angular desde Swagger",
+	"author": "Iñigo Gorosabel",
+	"license": "MIT",
+	"type": "module",
+	"bin": {
+		"swagger-to-angular": "./dist/bin/cli.js"
+	},
+	"main": "dist/bin/cli.js",
+	"files": [
+		"dist",
+		"README.md"
+	],
+	"scripts": {
+		"build": "tsc",
+		"start": "node dist/bin/cli.js"
+	},
+	"devDependencies": {
+		"@types/node": "^20.0.0",
+		"typescript": "^5.8.0"
+	}
+}
