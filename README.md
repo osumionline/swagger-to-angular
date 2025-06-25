@@ -29,7 +29,7 @@ npm install --save-dev @osumi/swagger-to-angular
 Luego puedes usarlo con `npx`:
 
 ```bash
-npx swagger-to-angular <url> <directorio>
+npx swagger-to-angular <opciones>
 ```
 
 ---
@@ -37,24 +37,25 @@ npx swagger-to-angular <url> <directorio>
 ## 🧪 Uso
 
 ```bash
-swagger-to-angular <url_del_swagger> <directorio_destino>
+swagger-to-angular [ -u <url> | -f <archivo> ] -d <directorio>
 ```
 
--   `url_del_swagger`: URL completa al archivo Swagger/OpenAPI (en formato JSON).
--   `directorio_destino`: Ruta relativa al proyecto donde se generará el archivo `.ts`.
+-   `-u, --url <url>`: URL al JSON Swagger
+-   `-f, --file <archivo>`: Ruta local a un archivo JSON Swagger
+-   `-d, --dest <directorio>`: Ruta donde se generará el archivo `.ts`
+
+> Es obligatorio indicar `-d`, y uno de `-u` o `-f` (pero no ambos).
 
 ---
 
-### ✅ Ejemplo:
+### ✅ Ejemplos:
 
 ```bash
-swagger-to-angular http://localhost:8080/api-docs.json src/app/services/api
-```
+# Leer desde una URL
+swagger-to-angular -u http://localhost:8080/api-docs.json -d src/app/services/api
 
-Esto generará:
-
-```
-src/app/services/api/documentacion/documentacion.service.ts
+# Leer desde un archivo local
+swagger-to-angular -f ./swagger.json -d src/app/services/api
 ```
 
 ---
@@ -68,12 +69,20 @@ Para contribuir o probar el proyecto localmente:
 npm install
 npm run build
 
-# Ejecutar localmente usando tsx
-npx tsx bin/cli.ts http://localhost:8080/api-docs.json src/api
+# Ejecutar localmente con tsx
+npx tsx bin/cli.ts -f ./swagger.json -d src/api
 
 # O probar como si estuviera instalado globalmente
 npm link
-swagger-to-angular http://localhost:8080/api-docs.json src/api
+swagger-to-angular -f ./swagger.json -d src/api
+```
+
+### ℹ️ Nota sobre `npm run`
+
+Si quieres ejecutar con `npm run`, usa `--` para pasar argumentos correctamente:
+
+```bash
+npm run start -- -f ./swagger.json -d src/api
 ```
 
 ---

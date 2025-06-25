@@ -9,13 +9,9 @@ interface ServiceInfo {
 }
 
 export async function generate(
-	swaggerUrl: string,
+	swagger: Record<string, any>,
 	relativeOutputPath: string
 ): Promise<void> {
-	const res: Response = await fetch(swaggerUrl);
-	if (!res.ok) throw new Error(`Error al obtener Swagger: ${res.statusText}`);
-	const swagger: Record<string, any> = await res.json();
-
 	const serviceInfo: ServiceInfo = extractServiceName(swagger);
 	const interfaces: string = generateInterfaces(
 		swagger.components?.schemas ?? {}
@@ -52,8 +48,9 @@ function extractServiceName(swagger: Record<string, any>): ServiceInfo {
 	const fullUrl: string = swagger.servers?.[0]?.url ?? '';
 	const slug: string = fullUrl.split('/').filter(Boolean).pop() ?? 'api';
 	const className: string =
-		slug.replace(/(^\w|-\w)/g, (m) => m.replace('-', '').toUpperCase()) +
-		'Service';
+		slug.replace(/(^\w|-\w)/g, (m: string) =>
+			m.replace('-', '').toUpperCase()
+		) + 'Service';
 	const fileName: string = `${slug}.service.ts`;
 	const basePathName: string = `basePath${className.replace('Service', '')}`;
 	return { fileName, className, basePathName, serverUrl: fullUrl };
@@ -62,12 +59,13 @@ function extractServiceName(swagger: Record<string, any>): ServiceInfo {
 function generateInterfaces(schemas: Record<string, any>): string {
 	const lines: string[] = [];
 
-	for (const [name, schema] of Object.entries<any>(schemas)) {
+	for (const [name, schema] of Object.entries(schemas)) {
 		lines.push(`export interface ${name} {`);
-		for (const [propName, prop] of Object.entries<any>(
+		for (const [propName, prop] of Object.entries(
 			schema.properties ?? {}
 		)) {
-			const type: string = mapSwaggerTypeToTs(prop);
+			const typedProp = prop as Record<string, any>;
+			const type: string = mapSwaggerTypeToTs(typedProp);
 			lines.push(`  ${propName}?: ${type};`);
 		}
 		lines.push('}\n');
@@ -84,7 +82,7 @@ function mapSwaggerTypeToTs(prop: Record<string, any>): string {
 		case 'number':
 			return 'number';
 		case 'string':
-			return prop.format === 'date-time' ? 'string' : 'string';
+			return 'string';
 		case 'boolean':
 			return 'boolean';
 		case 'array':
@@ -106,35 +104,54 @@ function generateMethods(
 ): string {
 	const methods: string[] = [];
 
-	for (const [rawPath, methodsMap] of Object.entries<any>(paths)) {
-		for (const [httpMethod, def] of Object.entries<any>(methodsMap)) {
+	for (const [rawPath, methodsMap] of Object.entries(paths)) {
+		for (const [httpMethod, defUnknown] of Object.entries(methodsMap)) {
+			const def = defUnknown as Record<string, any>;
 			const operationId: string =
 				def.operationId ??
-				`${httpMethod}_${rawPath.replace(/[\/{}]/g, '_')}`;
-			const responseType: string = extractRefName(
-				def.responses?.['200']?.content?.['application/json']?.schema
-					?.$ref ?? 'void'
-			);
+				`${httpMethod}_${rawPath.replace(/[\/{}/]/g, '_')}`;
+
+			const responses: Record<string, any> =
+				def.responses?.['200']?.content ?? {};
+			const contentType: string =
+				Object.keys(responses)[0] ?? 'application/json';
+
+			let returnType: string = 'void';
+			let responseTypeOption: string = '';
+
+			if (
+				contentType === 'application/pdf' ||
+				contentType === 'application/octet-stream'
+			) {
+				returnType = 'ArrayBuffer';
+				responseTypeOption = `{ responseType: 'arraybuffer' as 'arraybuffer' }`;
+			} else {
+				returnType = extractRefName(
+					responses['application/json']?.schema?.$ref ?? 'void'
+				);
+			}
 
 			const params: any[] = def.parameters ?? [];
 			const queryParams: any[] = params.filter((p) => p.in === 'query');
 			const pathParams: any[] = params.filter((p) => p.in === 'path');
 
 			const argsList: string[] = [];
+			const paramAssignments: string[] = [];
 
 			for (const param of pathParams) {
 				const type: string = mapSwaggerTypeToTs(param.schema);
-				argsList.push(`${param.name}: ${type}`);
+				argsList.push(`${param.name}?: ${type}`);
 			}
 
 			for (const param of queryParams) {
 				const type: string = mapSwaggerTypeToTs(param.schema);
-				const optional: string = param.required ? '' : '?';
-				argsList.push(`${param.name}${optional}: ${type}`);
+				argsList.push(`${param.name}?: ${type}`);
+				paramAssignments.push(param.name);
 			}
 
 			const content: any = def.requestBody?.content;
 			let bodyUsage: string = '{}';
+			let hasPayload = false;
 
 			if (content) {
 				if ('application/json' in content) {
@@ -142,24 +159,25 @@ function generateMethods(
 						content['application/json'].schema?.$ref;
 					if (ref) {
 						const bodyType: string = extractRefName(ref);
-						argsList.push(`payload: ${bodyType}`);
+						argsList.push(`payload?: ${bodyType}`);
 						bodyUsage = 'payload';
+						hasPayload = true;
 					}
 				} else if ('multipart/form-data' in content) {
 					const formParams: Record<string, any> =
 						content['multipart/form-data'].schema?.properties ?? {};
 					const formArgs: string[] = Object.keys(formParams).map(
-						(key) => `${key}: File`
+						(key) => `${key}?: File`
 					);
 					argsList.push(...formArgs);
 					const formDataLines: string[] = Object.keys(formParams).map(
-						(key) => `formData.append('${key}', ${key});`
+						(key) =>
+							`if (${key}) formData.append('${key}', ${key});`
 					);
-					bodyUsage = `(() => {
-    const formData = new FormData();
-    ${formDataLines.join('\n    ')}
-    return formData;
-  })()`;
+					bodyUsage = `(() => {\nconst formData = new FormData();\n${formDataLines.join(
+						'\n'
+					)}\nreturn formData;\n})()`;
+					hasPayload = true;
 				}
 			}
 
@@ -171,28 +189,38 @@ function generateMethods(
 				);
 			}
 
-			const argsSignature: string = argsList.join(', ');
 			const url: string = `\${this.${basePathName}}${interpolatedPath}`;
 
 			let paramsBlock: string = '';
 			let optionsBlock: string = '';
 
 			if (queryParams.length > 0) {
-				paramsBlock = `\n  const params = {\n    ${queryParams
-					.map((p) => p.name)
-					.join(',\n    ')}\n  };`;
-				optionsBlock = '{ params }';
-			} else {
-				optionsBlock =
-					httpMethod === 'get' || httpMethod === 'delete'
-						? '{}'
-						: bodyUsage;
+				paramsBlock = `\n  const params = {\n    ${paramAssignments.join(
+					',\n    '
+				)}\n  };`;
+				optionsBlock = `{ params }`;
 			}
 
+			if (responseTypeOption) {
+				optionsBlock = responseTypeOption;
+			}
+
+			const requestArgs: string = (() => {
+				if (httpMethod === 'get' || httpMethod === 'delete') {
+					return optionsBlock || '{}';
+				}
+				if (hasPayload && optionsBlock.startsWith('{ params')) {
+					return `${bodyUsage}, ${optionsBlock}`;
+				}
+				return bodyUsage;
+			})();
+
+			const argsSignature: string = argsList.join(', ');
+
 			const method = `
-  ${operationId}(${argsSignature}): Observable<${responseType}> {${paramsBlock}
+  ${operationId}(${argsSignature}): Observable<${returnType}> {${paramsBlock}
     return this.http
-      .${httpMethod}<${responseType}>(\`${url}\`, ${optionsBlock})
+      .${httpMethod}<${returnType}>(\`${url}\`, ${requestArgs})
       .pipe(catchError(this.handleError));
   }`;
 
@@ -233,16 +261,15 @@ ${methods}
    * @returns Error manejado con un mensaje de error legible
    */
   private handleError(error: HttpErrorResponse): Observable<never> {
-    let errorMessage: string = '';
+    let errorMessage: string = "";
 
     if (error.error instanceof ErrorEvent) {
-      errorMessage = \`Error: \${error.error.message}\`;
+      errorMessage = "Error: " + error.error.message;
     } else {
-      errorMessage = \`Error \${error.status}: \${error.message}\`;
+      errorMessage = "Error " + error.status + ": " + error.message;
     }
 
     return throwError((): Error => new Error(errorMessage));
   }
-}
-`;
+}`;
 }
