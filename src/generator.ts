@@ -26,12 +26,8 @@ export async function generate(
 	const slug: string = serviceInfo.fileName.replace('.service.ts', '');
 	const serviceDir: string = path.join(basePath, slug);
 
-	const parts: string[] = serviceDir.split(path.sep);
-	for (let i = 1; i <= parts.length; i++) {
-		const subPath: string = path.join(...parts.slice(0, i));
-		if (!fs.existsSync(subPath)) {
-			fs.mkdirSync(subPath);
-		}
+	if (!fs.existsSync(serviceDir)) {
+		fs.mkdirSync(serviceDir, { recursive: true });
 	}
 
 	const fullFilePath: string = path.join(serviceDir, serviceInfo.fileName);
@@ -117,14 +113,14 @@ function generateMethods(
 				Object.keys(responses)[0] ?? 'application/json';
 
 			let returnType: string = 'void';
-			let responseTypeOption: string = '';
+			let isBinary = false;
 
 			if (
 				contentType === 'application/pdf' ||
 				contentType === 'application/octet-stream'
 			) {
 				returnType = 'ArrayBuffer';
-				responseTypeOption = `{ responseType: 'arraybuffer' as 'arraybuffer' }`;
+				isBinary = true;
 			} else {
 				returnType = extractRefName(
 					responses['application/json']?.schema?.$ref ?? 'void'
@@ -136,7 +132,7 @@ function generateMethods(
 			const pathParams: any[] = params.filter((p) => p.in === 'path');
 
 			const argsList: string[] = [];
-			const paramAssignments: string[] = [];
+			const queryEntries: string[] = [];
 
 			for (const param of pathParams) {
 				const type: string = mapSwaggerTypeToTs(param.schema);
@@ -146,37 +142,20 @@ function generateMethods(
 			for (const param of queryParams) {
 				const type: string = mapSwaggerTypeToTs(param.schema);
 				argsList.push(`${param.name}?: ${type}`);
-				paramAssignments.push(param.name);
+				queryEntries.push(`['${param.name}', ${param.name}]`);
 			}
 
 			const content: any = def.requestBody?.content;
-			let bodyUsage: string = '{}';
+			let bodyUsage: string | undefined;
 			let hasPayload = false;
 
-			if (content) {
-				if ('application/json' in content) {
-					const ref: string | undefined =
-						content['application/json'].schema?.$ref;
-					if (ref) {
-						const bodyType: string = extractRefName(ref);
-						argsList.push(`payload?: ${bodyType}`);
-						bodyUsage = 'payload';
-						hasPayload = true;
-					}
-				} else if ('multipart/form-data' in content) {
-					const formParams: Record<string, any> =
-						content['multipart/form-data'].schema?.properties ?? {};
-					const formArgs: string[] = Object.keys(formParams).map(
-						(key) => `${key}?: File`
-					);
-					argsList.push(...formArgs);
-					const formDataLines: string[] = Object.keys(formParams).map(
-						(key) =>
-							`if (${key}) formData.append('${key}', ${key});`
-					);
-					bodyUsage = `(() => {\nconst formData = new FormData();\n${formDataLines.join(
-						'\n'
-					)}\nreturn formData;\n})()`;
+			if (content && 'application/json' in content) {
+				const ref: string | undefined =
+					content['application/json'].schema?.$ref;
+				if (ref) {
+					const bodyType: string = extractRefName(ref);
+					argsList.push(`payload?: ${bodyType}`);
+					bodyUsage = 'payload';
 					hasPayload = true;
 				}
 			}
@@ -191,36 +170,45 @@ function generateMethods(
 
 			const url: string = `\${this.${basePathName}}${interpolatedPath}`;
 
-			let paramsBlock: string = '';
-			let optionsBlock: string = '';
-
-			if (queryParams.length > 0) {
-				paramsBlock = `\n  const params = {\n    ${paramAssignments.join(
-					',\n    '
-				)}\n  };`;
-				optionsBlock = `{ params }`;
+			let options = '';
+			if (queryEntries.length > 0 || isBinary) {
+				const queryParamsBlock = queryEntries.length
+					? `params: Object.fromEntries([\n${queryEntries.join(
+							',\n'
+					  )}\n].filter(([, v]) => v !== undefined))`
+					: '';
+				const responseTypeBlock = isBinary
+					? `responseType: 'arraybuffer' as const`
+					: '';
+				const combined = [queryParamsBlock, responseTypeBlock]
+					.filter(Boolean)
+					.join(',\n');
+				options = `{\n${combined}\n}`;
 			}
 
-			if (responseTypeOption) {
-				optionsBlock = responseTypeOption;
+			let requestArgs = '';
+			if (httpMethod === 'get') {
+				requestArgs = options || '{}';
+			} else if (httpMethod === 'delete' && hasPayload) {
+				requestArgs = `{ body: ${bodyUsage}${
+					options ? `, ...${options}` : ''
+				} }`;
+			} else if (httpMethod === 'delete') {
+				requestArgs = options || '{}';
+			} else if (hasPayload) {
+				requestArgs = options ? `${bodyUsage}, ${options}` : bodyUsage!;
+			} else {
+				requestArgs = options || '{}';
 			}
 
-			const requestArgs: string = (() => {
-				if (httpMethod === 'get' || httpMethod === 'delete') {
-					return optionsBlock || '{}';
-				}
-				if (hasPayload && optionsBlock.startsWith('{ params')) {
-					return `${bodyUsage}, ${optionsBlock}`;
-				}
-				return bodyUsage;
-			})();
-
-			const argsSignature: string = argsList.join(', ');
+			const httpCall = isBinary
+				? `.${httpMethod}(\`${url}\`, ${requestArgs})`
+				: `.${httpMethod}<${returnType}>(\`${url}\`, ${requestArgs})`;
 
 			const method = `
-  ${operationId}(${argsSignature}): Observable<${returnType}> {${paramsBlock}
+  ${operationId}(${argsList.join(', ')}): Observable<${returnType}> {
     return this.http
-      .${httpMethod}<${returnType}>(\`${url}\`, ${requestArgs})
+      ${httpCall}
       .pipe(catchError(this.handleError));
   }`;
 
@@ -239,7 +227,6 @@ function buildFullFile(
 	return `import {
   HttpClient,
   HttpErrorResponse,
-  HttpParams,
 } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
@@ -254,12 +241,6 @@ export class ${serviceInfo.className} {
 
 ${methods}
 
-  /**
-   * Método para manejar los errores de las peticiones HTTP
-   *
-   * @param error Error de la petición
-   * @returns Error manejado con un mensaje de error legible
-   */
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage: string = "";
 
