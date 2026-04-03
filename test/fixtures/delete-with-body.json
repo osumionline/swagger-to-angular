@@ -1,0 +1,36 @@
+{
+  "openapi": "3.0.0",
+  "servers": [{ "url": "https://example.com/delbody" }],
+  "paths": {
+    "/v1/items/{id}": {
+      "delete": {
+        "operationId": "deleteItem",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["reason"],
+                "properties": {
+                  "reason": { "type": "string" },
+                  "force": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "type": "boolean" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

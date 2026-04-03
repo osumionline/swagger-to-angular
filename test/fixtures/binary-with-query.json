@@ -1,0 +1,21 @@
+{
+  "openapi": "3.0.0",
+  "servers": [{ "url": "https://example.com/binquery" }],
+  "paths": {
+    "/v1/report": {
+      "get": {
+        "operationId": "getReportPdfWithQuery",
+        "parameters": [
+          { "name": "id", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": { "schema": { "type": "string", "format": "binary" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "openapi": "3.0.0",
+  "servers": [{ "url": "https://example.com/query" }],
+  "paths": {
+    "/v1/items": {
+      "get": {
+        "operationId": "searchItems",
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "esCierre", "in": "query", "schema": { "type": "boolean" } }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

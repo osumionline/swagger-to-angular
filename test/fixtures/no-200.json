@@ -1,0 +1,14 @@
+{
+  "openapi": "3.0.0",
+  "servers": [{ "url": "https://example.com/no200" }],
+  "paths": {
+    "/v1/no200": {
+      "get": {
+        "operationId": "getNo200",
+        "responses": {
+          "204": { "description": "No content" }
+        }
+      }
+    }
+  }
+}

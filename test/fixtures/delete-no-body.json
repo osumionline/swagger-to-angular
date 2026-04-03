@@ -1,0 +1,21 @@
+{
+  "openapi": "3.0.0",
+  "servers": [{ "url": "https://example.com/delnobody" }],
+  "paths": {
+    "/v1/items/{id}": {
+      "delete": {
+        "operationId": "deleteItemNoBody",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "type": "boolean" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

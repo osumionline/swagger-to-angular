@@ -1,0 +1,18 @@
+{
+  "openapi": "3.0.0",
+  "servers": [{ "url": "https://example.com/postnobody" }],
+  "paths": {
+    "/v1/ping": {
+      "post": {
+        "operationId": "postPing",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "openapi": "3.0.0",
+  "servers": [{ "url": "https://example.com/body" }],
+  "paths": {
+    "/v1/users": {
+      "post": {
+        "operationId": "createUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": { "type": "string" },
+                  "age": { "type": "integer", "nullable": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "type": "boolean" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "openapi": "3.0.0",
+  "servers": [{ "url": "https://example.com/noprops" }],
+  "components": {
+    "schemas": {
+      "Empty": { "type": "object" }
+    }
+  },
+  "paths": {
+    "/v1/empty": {
+      "get": {
+        "operationId": "getEmpty",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Empty" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

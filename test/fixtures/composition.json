@@ -1,0 +1,63 @@
+{
+  "openapi": "3.0.0",
+  "servers": [{ "url": "https://example.com/comp" }],
+  "components": {
+    "schemas": {
+      "A": {
+        "type": "object",
+        "properties": { "a": { "type": "string" } }
+      },
+      "B": {
+        "type": "object",
+        "properties": { "b": { "type": "integer" } }
+      }
+    }
+  },
+  "paths": {
+    "/v1/thing": {
+      "get": {
+        "operationId": "getThing",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    { "$ref": "#/components/schemas/A" },
+                    { "$ref": "#/components/schemas/B" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "kind": { "type": "string", "enum": ["X", "Y"] },
+                        "n": { "type": "integer", "nullable": true }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/merge": {
+      "get": {
+        "operationId": "getMerge",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/A" },
+                    { "$ref": "#/components/schemas/B" }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

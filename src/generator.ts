@@ -9,7 +9,7 @@ interface SwaggerComponents {
   schemas?: Record<string, SwaggerSchema>;
 }
 
-interface SwaggerDoc {
+export interface SwaggerDoc {
   servers?: SwaggerServer[];
   components?: SwaggerComponents;
   paths?: SwaggerPaths;
@@ -246,7 +246,8 @@ function mapSwaggerSchemaToTsNonNullable(schema: SwaggerSchema): string {
  * @returns "Foo" or "any" fallback.
  */
 function extractRefName(ref: string): string {
-  return ref.split('/').pop() ?? 'any';
+  const last: string = ref.split('/').pop() ?? '';
+  return last === '' ? 'any' : last;
 }
 
 /**
@@ -515,3 +516,12 @@ ${methods}
   }
 }`;
 }
+
+export const __test__ = {
+  mapSwaggerSchemaToTs,
+  mapSwaggerSchemaToTsNonNullable,
+  extractRefName,
+  toTsLiteral,
+  buildUnion,
+  buildIntersection,
+};

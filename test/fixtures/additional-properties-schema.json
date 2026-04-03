@@ -1,0 +1,23 @@
+{
+  "openapi": "3.0.0",
+  "servers": [{ "url": "https://example.com/addprops" }],
+  "paths": {
+    "/v1/map": {
+      "get": {
+        "operationId": "getMap",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": { "type": "integer" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

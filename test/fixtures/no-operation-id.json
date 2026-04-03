@@ -1,0 +1,17 @@
+{
+  "openapi": "3.0.0",
+  "servers": [{ "url": "https://example.com/noopid" }],
+  "paths": {
+    "/v1/ping": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

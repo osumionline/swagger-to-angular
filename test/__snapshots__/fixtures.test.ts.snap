@@ -1,0 +1,838 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`swagger-to-angular fixtures > additional-properties-schema: maps to { [key: string]: number } 1`] = `
+"import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { catchError, Observable, throwError } from 'rxjs';
+
+
+
+@Injectable({ providedIn: 'root' })
+export class AddpropsService {
+  http: HttpClient = inject(HttpClient);
+  basePathAddprops: string = environment.basePathAddprops || 'https://example.com/addprops';
+
+
+  /**
+   * Auto-generated method for operationId: getMap
+   */
+  getMap(): Observable<{ [key: string]: number }> {
+    return this.http
+      .get<{ [key: string]: number }>(\`\${this.basePathAddprops}/v1/map\`, {})
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Generic HTTP error handler.
+   *
+   * @param error HttpErrorResponse
+   * @returns Observable that errors with a normalized Error instance.
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string = "";
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = "Error: " + error.error.message;
+    } else {
+      errorMessage = "Error " + error.status + ": " + error.message;
+    }
+
+    return throwError((): Error => new Error(errorMessage));
+  }
+}"
+`;
+
+exports[`swagger-to-angular fixtures > binary: pdf returns ArrayBuffer and sets responseType arraybuffer 1`] = `
+"import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { catchError, Observable, throwError } from 'rxjs';
+
+
+
+@Injectable({ providedIn: 'root' })
+export class BinService {
+  http: HttpClient = inject(HttpClient);
+  basePathBin: string = environment.basePathBin || 'https://example.com/bin';
+
+
+  /**
+   * Auto-generated method for operationId: getReportPdf
+   */
+  getReportPdf(): Observable<ArrayBuffer> {
+    const options = {
+      responseType: 'arraybuffer' as const
+    };
+    return this.http
+      .get(\`\${this.basePathBin}/v1/report\`, options)
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Generic HTTP error handler.
+   *
+   * @param error HttpErrorResponse
+   * @returns Observable that errors with a normalized Error instance.
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string = "";
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = "Error: " + error.error.message;
+    } else {
+      errorMessage = "Error " + error.status + ": " + error.message;
+    }
+
+    return throwError((): Error => new Error(errorMessage));
+  }
+}"
+`;
+
+exports[`swagger-to-angular fixtures > binary-with-query: binary response + query params merges options 1`] = `
+"import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { catchError, Observable, throwError } from 'rxjs';
+
+
+
+@Injectable({ providedIn: 'root' })
+export class BinqueryService {
+  http: HttpClient = inject(HttpClient);
+  basePathBinquery: string = environment.basePathBinquery || 'https://example.com/binquery';
+
+
+  /**
+   * Auto-generated method for operationId: getReportPdfWithQuery
+   */
+  getReportPdfWithQuery(id?: number): Observable<ArrayBuffer> {
+    let params = new HttpParams();
+    if (id !== undefined) {
+      params = params.set('id', String(id));
+    }
+    const options = {
+      params,
+      responseType: 'arraybuffer' as const
+    };
+    return this.http
+      .get(\`\${this.basePathBinquery}/v1/report\`, options)
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Generic HTTP error handler.
+   *
+   * @param error HttpErrorResponse
+   * @returns Observable that errors with a normalized Error instance.
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string = "";
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = "Error: " + error.error.message;
+    } else {
+      errorMessage = "Error " + error.status + ": " + error.message;
+    }
+
+    return throwError((): Error => new Error(errorMessage));
+  }
+}"
+`;
+
+exports[`swagger-to-angular fixtures > body-inline: generates required payload (no ?) and inline body type 1`] = `
+"import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { catchError, Observable, throwError } from 'rxjs';
+
+
+
+@Injectable({ providedIn: 'root' })
+export class BodyService {
+  http: HttpClient = inject(HttpClient);
+  basePathBody: string = environment.basePathBody || 'https://example.com/body';
+
+
+  /**
+   * Auto-generated method for operationId: createUser
+   */
+  createUser(payload: { email: string; age?: number | null; }): Observable<boolean> {
+    return this.http
+      .post<boolean>(\`\${this.basePathBody}/v1/users\`, payload, {})
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Generic HTTP error handler.
+   *
+   * @param error HttpErrorResponse
+   * @returns Observable that errors with a normalized Error instance.
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string = "";
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = "Error: " + error.error.message;
+    } else {
+      errorMessage = "Error " + error.status + ": " + error.message;
+    }
+
+    return throwError((): Error => new Error(errorMessage));
+  }
+}"
+`;
+
+exports[`swagger-to-angular fixtures > composition: generates oneOf union and allOf intersection 1`] = `
+"import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { catchError, Observable, throwError } from 'rxjs';
+
+export interface A {
+  a?: string;
+}
+
+export interface B {
+  b?: number;
+}
+
+
+@Injectable({ providedIn: 'root' })
+export class CompService {
+  http: HttpClient = inject(HttpClient);
+  basePathComp: string = environment.basePathComp || 'https://example.com/comp';
+
+
+  /**
+   * Auto-generated method for operationId: getThing
+   */
+  getThing(): Observable<A | B | { kind?: "X" | "Y"; n?: number | null; }> {
+    return this.http
+      .get<A | B | { kind?: "X" | "Y"; n?: number | null; }>(\`\${this.basePathComp}/v1/thing\`, {})
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Auto-generated method for operationId: getMerge
+   */
+  getMerge(): Observable<A & B> {
+    return this.http
+      .get<A & B>(\`\${this.basePathComp}/v1/merge\`, {})
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Generic HTTP error handler.
+   *
+   * @param error HttpErrorResponse
+   * @returns Observable that errors with a normalized Error instance.
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string = "";
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = "Error: " + error.error.message;
+    } else {
+      errorMessage = "Error " + error.status + ": " + error.message;
+    }
+
+    return throwError((): Error => new Error(errorMessage));
+  }
+}"
+`;
+
+exports[`swagger-to-angular fixtures > delete-no-body: delete without payload uses options object 1`] = `
+"import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { catchError, Observable, throwError } from 'rxjs';
+
+
+
+@Injectable({ providedIn: 'root' })
+export class DelnobodyService {
+  http: HttpClient = inject(HttpClient);
+  basePathDelnobody: string = environment.basePathDelnobody || 'https://example.com/delnobody';
+
+
+  /**
+   * Auto-generated method for operationId: deleteItemNoBody
+   */
+  deleteItemNoBody(id: number): Observable<boolean> {
+    return this.http
+      .delete<boolean>(\`\${this.basePathDelnobody}/v1/items/\${id}\`, {})
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Generic HTTP error handler.
+   *
+   * @param error HttpErrorResponse
+   * @returns Observable that errors with a normalized Error instance.
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string = "";
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = "Error: " + error.error.message;
+    } else {
+      errorMessage = "Error " + error.status + ": " + error.message;
+    }
+
+    return throwError((): Error => new Error(errorMessage));
+  }
+}"
+`;
+
+exports[`swagger-to-angular fixtures > delete-with-body: delete uses body option object and preserves options merging 1`] = `
+"import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { catchError, Observable, throwError } from 'rxjs';
+
+
+
+@Injectable({ providedIn: 'root' })
+export class DelbodyService {
+  http: HttpClient = inject(HttpClient);
+  basePathDelbody: string = environment.basePathDelbody || 'https://example.com/delbody';
+
+
+  /**
+   * Auto-generated method for operationId: deleteItem
+   */
+  deleteItem(id: number, payload: { reason: string; force?: boolean; }): Observable<boolean> {
+    return this.http
+      .delete<boolean>(\`\${this.basePathDelbody}/v1/items/\${id}\`, { body: payload })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Generic HTTP error handler.
+   *
+   * @param error HttpErrorResponse
+   * @returns Observable that errors with a normalized Error instance.
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string = "";
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = "Error: " + error.error.message;
+    } else {
+      errorMessage = "Error " + error.status + ": " + error.message;
+    }
+
+    return throwError((): Error => new Error(errorMessage));
+  }
+}"
+`;
+
+exports[`swagger-to-angular fixtures > minimal: generates service with class, basePath and method 1`] = `
+"import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { catchError, Observable, throwError } from 'rxjs';
+
+export interface Foo {
+  id?: number;
+  name?: string;
+}
+
+
+@Injectable({ providedIn: 'root' })
+export class ApiService {
+  http: HttpClient = inject(HttpClient);
+  basePathApi: string = environment.basePathApi || 'https://example.com/api';
+
+
+  /**
+   * Auto-generated method for operationId: getFoo
+   */
+  getFoo(): Observable<Foo> {
+    return this.http
+      .get<Foo>(\`\${this.basePathApi}/v1/foo\`, {})
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Generic HTTP error handler.
+   *
+   * @param error HttpErrorResponse
+   * @returns Observable that errors with a normalized Error instance.
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string = "";
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = "Error: " + error.error.message;
+    } else {
+      errorMessage = "Error " + error.status + ": " + error.message;
+    }
+
+    return throwError((): Error => new Error(errorMessage));
+  }
+}"
+`;
+
+exports[`swagger-to-angular fixtures > missing-servers: falls back to ApiService and basePathApi 1`] = `
+"import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { catchError, Observable, throwError } from 'rxjs';
+
+
+
+@Injectable({ providedIn: 'root' })
+export class ApiService {
+  http: HttpClient = inject(HttpClient);
+  basePathApi: string = environment.basePathApi || '';
+
+
+  /**
+   * Auto-generated method for operationId: getFooNoServers
+   */
+  getFooNoServers(): Observable<string> {
+    return this.http
+      .get<string>(\`\${this.basePathApi}/v1/foo\`, {})
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Generic HTTP error handler.
+   *
+   * @param error HttpErrorResponse
+   * @returns Observable that errors with a normalized Error instance.
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string = "";
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = "Error: " + error.error.message;
+    } else {
+      errorMessage = "Error " + error.status + ": " + error.message;
+    }
+
+    return throwError((): Error => new Error(errorMessage));
+  }
+}"
+`;
+
+exports[`swagger-to-angular fixtures > no-200: handles missing 200 response content 1`] = `
+"import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { catchError, Observable, throwError } from 'rxjs';
+
+
+
+@Injectable({ providedIn: 'root' })
+export class No200Service {
+  http: HttpClient = inject(HttpClient);
+  basePathNo200: string = environment.basePathNo200 || 'https://example.com/no200';
+
+
+  /**
+   * Auto-generated method for operationId: getNo200
+   */
+  getNo200(): Observable<any> {
+    return this.http
+      .get<any>(\`\${this.basePathNo200}/v1/no200\`, {})
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Generic HTTP error handler.
+   *
+   * @param error HttpErrorResponse
+   * @returns Observable that errors with a normalized Error instance.
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string = "";
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = "Error: " + error.error.message;
+    } else {
+      errorMessage = "Error " + error.status + ": " + error.message;
+    }
+
+    return throwError((): Error => new Error(errorMessage));
+  }
+}"
+`;
+
+exports[`swagger-to-angular fixtures > no-operation-id: generates a fallback operationId 1`] = `
+"import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { catchError, Observable, throwError } from 'rxjs';
+
+
+
+@Injectable({ providedIn: 'root' })
+export class NoopidService {
+  http: HttpClient = inject(HttpClient);
+  basePathNoopid: string = environment.basePathNoopid || 'https://example.com/noopid';
+
+
+  /**
+   * Auto-generated method for operationId: get__v1_ping
+   */
+  get__v1_ping(): Observable<string> {
+    return this.http
+      .get<string>(\`\${this.basePathNoopid}/v1/ping\`, {})
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Generic HTTP error handler.
+   *
+   * @param error HttpErrorResponse
+   * @returns Observable that errors with a normalized Error instance.
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string = "";
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = "Error: " + error.error.message;
+    } else {
+      errorMessage = "Error " + error.status + ": " + error.message;
+    }
+
+    return throwError((): Error => new Error(errorMessage));
+  }
+}"
+`;
+
+exports[`swagger-to-angular fixtures > no-paths: handles swagger without paths 1`] = `
+"import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { catchError, Observable, throwError } from 'rxjs';
+
+
+
+@Injectable({ providedIn: 'root' })
+export class NopathsService {
+  http: HttpClient = inject(HttpClient);
+  basePathNopaths: string = environment.basePathNopaths || 'https://example.com/nopaths';
+
+
+
+  /**
+   * Generic HTTP error handler.
+   *
+   * @param error HttpErrorResponse
+   * @returns Observable that errors with a normalized Error instance.
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string = "";
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = "Error: " + error.error.message;
+    } else {
+      errorMessage = "Error " + error.status + ": " + error.message;
+    }
+
+    return throwError((): Error => new Error(errorMessage));
+  }
+}"
+`;
+
+exports[`swagger-to-angular fixtures > object-no-type-properties: treats schema as object literal 1`] = `
+"import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { catchError, Observable, throwError } from 'rxjs';
+
+
+
+@Injectable({ providedIn: 'root' })
+export class NotypeService {
+  http: HttpClient = inject(HttpClient);
+  basePathNotype: string = environment.basePathNotype || 'https://example.com/notype';
+
+
+  /**
+   * Auto-generated method for operationId: getObjNoType
+   */
+  getObjNoType(): Observable<{ x?: string; y?: number; }> {
+    return this.http
+      .get<{ x?: string; y?: number; }>(\`\${this.basePathNotype}/v1/obj\`, {})
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Generic HTTP error handler.
+   *
+   * @param error HttpErrorResponse
+   * @returns Observable that errors with a normalized Error instance.
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string = "";
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = "Error: " + error.error.message;
+    } else {
+      errorMessage = "Error " + error.status + ": " + error.message;
+    }
+
+    return throwError((): Error => new Error(errorMessage));
+  }
+}"
+`;
+
+exports[`swagger-to-angular fixtures > path-params: required path param is not optional in method signature 1`] = `
+"import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { catchError, Observable, throwError } from 'rxjs';
+
+
+
+@Injectable({ providedIn: 'root' })
+export class PathService {
+  http: HttpClient = inject(HttpClient);
+  basePathPath: string = environment.basePathPath || 'https://example.com/path';
+
+
+  /**
+   * Auto-generated method for operationId: getUser
+   */
+  getUser(id: number): Observable<string> {
+    return this.http
+      .get<string>(\`\${this.basePathPath}/v1/users/\${id}\`, {})
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Generic HTTP error handler.
+   *
+   * @param error HttpErrorResponse
+   * @returns Observable that errors with a normalized Error instance.
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string = "";
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = "Error: " + error.error.message;
+    } else {
+      errorMessage = "Error " + error.status + ": " + error.message;
+    }
+
+    return throwError((): Error => new Error(errorMessage));
+  }
+}"
+`;
+
+exports[`swagger-to-angular fixtures > post-no-body: post without payload uses options object 1`] = `
+"import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { catchError, Observable, throwError } from 'rxjs';
+
+
+
+@Injectable({ providedIn: 'root' })
+export class PostnobodyService {
+  http: HttpClient = inject(HttpClient);
+  basePathPostnobody: string = environment.basePathPostnobody || 'https://example.com/postnobody';
+
+
+  /**
+   * Auto-generated method for operationId: postPing
+   */
+  postPing(): Observable<string> {
+    return this.http
+      .post<string>(\`\${this.basePathPostnobody}/v1/ping\`, {})
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Generic HTTP error handler.
+   *
+   * @param error HttpErrorResponse
+   * @returns Observable that errors with a normalized Error instance.
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string = "";
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = "Error: " + error.error.message;
+    } else {
+      errorMessage = "Error " + error.status + ": " + error.message;
+    }
+
+    return throwError((): Error => new Error(errorMessage));
+  }
+}"
+`;
+
+exports[`swagger-to-angular fixtures > query-params: uses HttpParams and if blocks with braces 1`] = `
+"import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { catchError, Observable, throwError } from 'rxjs';
+
+
+
+@Injectable({ providedIn: 'root' })
+export class QueryService {
+  http: HttpClient = inject(HttpClient);
+  basePathQuery: string = environment.basePathQuery || 'https://example.com/query';
+
+
+  /**
+   * Auto-generated method for operationId: searchItems
+   */
+  searchItems(q?: string, page?: number, esCierre?: boolean): Observable<string> {
+    let params = new HttpParams();
+    if (q !== undefined) {
+      params = params.set('q', String(q));
+    }
+    if (page !== undefined) {
+      params = params.set('page', String(page));
+    }
+    if (esCierre !== undefined) {
+      params = params.set('esCierre', String(esCierre));
+    }
+    const options = {
+      params
+    };
+    return this.http
+      .get<string>(\`\${this.basePathQuery}/v1/items\`, options)
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Generic HTTP error handler.
+   *
+   * @param error HttpErrorResponse
+   * @returns Observable that errors with a normalized Error instance.
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string = "";
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = "Error: " + error.error.message;
+    } else {
+      errorMessage = "Error " + error.status + ": " + error.message;
+    }
+
+    return throwError((): Error => new Error(errorMessage));
+  }
+}"
+`;
+
+exports[`swagger-to-angular fixtures > schema-no-properties: interface without properties is generated 1`] = `
+"import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { catchError, Observable, throwError } from 'rxjs';
+
+export interface Empty {
+}
+
+
+@Injectable({ providedIn: 'root' })
+export class NopropsService {
+  http: HttpClient = inject(HttpClient);
+  basePathNoprops: string = environment.basePathNoprops || 'https://example.com/noprops';
+
+
+  /**
+   * Auto-generated method for operationId: getEmpty
+   */
+  getEmpty(): Observable<Empty> {
+    return this.http
+      .get<Empty>(\`\${this.basePathNoprops}/v1/empty\`, {})
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Generic HTTP error handler.
+   *
+   * @param error HttpErrorResponse
+   * @returns Observable that errors with a normalized Error instance.
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string = "";
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = "Error: " + error.error.message;
+    } else {
+      errorMessage = "Error " + error.status + ": " + error.message;
+    }
+
+    return throwError((): Error => new Error(errorMessage));
+  }
+}"
+`;

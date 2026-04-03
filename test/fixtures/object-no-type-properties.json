@@ -1,0 +1,25 @@
+{
+  "openapi": "3.0.0",
+  "servers": [{ "url": "https://example.com/notype" }],
+  "paths": {
+    "/v1/obj": {
+      "get": {
+        "operationId": "getObjNoType",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "x": { "type": "string" },
+                    "y": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "openapi": "3.0.0",
+  "servers": [{ "url": "https://example.com/api" }],
+  "components": {
+    "schemas": {
+      "Foo": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/v1/foo": {
+      "get": {
+        "operationId": "getFoo",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Foo" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
