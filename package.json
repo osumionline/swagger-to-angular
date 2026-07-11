@@ -43,13 +43,13 @@
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
 		"@types/node": "^24.10.13",
-		"@typescript-eslint/eslint-plugin": "^8.61.1",
-		"@typescript-eslint/parser": "^8.61.1",
-		"@vitest/coverage-v8": "^4.1.9",
-		"eslint": "^10.5.0",
+		"@typescript-eslint/eslint-plugin": "^8.63.0",
+		"@typescript-eslint/parser": "^8.63.0",
+		"@vitest/coverage-v8": "^4.1.10",
+		"eslint": "^10.7.0",
 		"typescript": "^6.0.3",
-		"typescript-eslint": "^8.61.1",
-		"vitest": "^4.1.9"
+		"typescript-eslint": "^8.63.0",
+		"vitest": "^4.1.10"
 	},
 	"publishConfig": {
 		"access": "public"
