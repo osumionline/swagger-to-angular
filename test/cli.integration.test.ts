@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
 import { execFile } from 'node:child_process';
 import fs from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
+import { describe, expect, it } from 'vitest';
 
 function tmpDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'swagger-to-angular-cli-'));
@@ -11,7 +11,11 @@ function tmpDir(): string {
 
 type CliResult = { stdout: string; stderr: string };
 
-async function runCli(args: string[], cwd: string, timeoutMs: number = 15_000): Promise<CliResult> {
+async function runCli(
+  args: string[],
+  cwd: string,
+  timeoutMs: number = 15_000,
+): Promise<CliResult> {
   const nodePath: string = process.execPath;
   const cliPath: string = path.join(cwd, 'dist', 'bin', 'cli.js');
 
@@ -36,7 +40,7 @@ async function runCli(args: string[], cwd: string, timeoutMs: number = 15_000): 
           stdout: typeof stdout === 'string' ? stdout : '',
           stderr: typeof stderr === 'string' ? stderr : '',
         });
-      }
+      },
     );
 
     const timer = setTimeout(() => {
@@ -51,7 +55,7 @@ async function runCli(args: string[], cwd: string, timeoutMs: number = 15_000): 
 async function startServer(
   statusCode: number,
   body: string,
-  contentType: string = 'application/json'
+  contentType: string = 'application/json',
 ): Promise<{ url: string; close: () => Promise<void> }> {
   return await new Promise((resolve) => {
     const server = http.createServer((_, res) => {
@@ -96,7 +100,11 @@ describe('CLI integration', () => {
     const cwd: string = process.cwd();
     const out: string = tmpDir();
 
-    await expect(runCli(['-d', out], cwd)).rejects.toBeTruthy();
+    await expect(runCli(['-d', out], cwd)).rejects.toMatchObject({
+      stderr: expect.stringContaining(
+        'Debes indicar una URL (-u) o un archivo JSON (-f)',
+      ),
+    });
   });
 
   it('fails if both -u and -f are provided', async () => {
@@ -104,21 +112,40 @@ describe('CLI integration', () => {
     const out: string = tmpDir();
     const fixture: string = path.join(cwd, 'test', 'fixtures', 'minimal.json');
 
-    await expect(runCli(['-u', 'https://example.com/swagger.json', '-f', fixture, '-d', out], cwd)).rejects.toBeTruthy();
+    await expect(
+      runCli(
+        ['-u', 'https://example.com/swagger.json', '-f', fixture, '-d', out],
+        cwd,
+      ),
+    ).rejects.toMatchObject({
+      stderr: expect.stringContaining('No puedes usar -u y -f al mismo tiempo'),
+    });
   });
 
   it('fails if file does not exist', async () => {
     const cwd: string = process.cwd();
     const out: string = tmpDir();
 
-    await expect(runCli(['-f', path.join(cwd, 'test', 'fixtures', 'nope.json'), '-d', out], cwd)).rejects.toBeTruthy();
+    await expect(
+      runCli(
+        ['-f', path.join(cwd, 'test', 'fixtures', 'nope.json'), '-d', out],
+        cwd,
+      ),
+    ).rejects.toMatchObject({
+      stderr: expect.stringContaining('El archivo no existe:'),
+    });
   });
 
   it('supports -u (url) with local http server returning swagger', async () => {
     const cwd: string = process.cwd();
     const out: string = tmpDir();
 
-    const fixturePath: string = path.join(cwd, 'test', 'fixtures', 'minimal.json');
+    const fixturePath: string = path.join(
+      cwd,
+      'test',
+      'fixtures',
+      'minimal.json',
+    );
     const fixtureBody: string = fs.readFileSync(fixturePath, 'utf-8');
 
     const { url, close } = await startServer(200, fixtureBody);
@@ -138,9 +165,14 @@ describe('CLI integration', () => {
     const cwd: string = process.cwd();
     const out: string = tmpDir();
 
-    const { url, close } = await startServer(404, JSON.stringify({ error: 'not found' }));
+    const { url, close } = await startServer(
+      404,
+      JSON.stringify({ error: 'not found' }),
+    );
     try {
-      await expect(runCli(['-u', url, '-d', out], cwd)).rejects.toBeTruthy();
+      await expect(runCli(['-u', url, '-d', out], cwd)).rejects.toMatchObject({
+        stderr: expect.stringContaining('Error al obtener la URL: 404'),
+      });
     } finally {
       await close();
     }
@@ -150,9 +182,15 @@ describe('CLI integration', () => {
     const cwd: string = process.cwd();
     const out: string = tmpDir();
 
-    const { url, close } = await startServer(200, 'NOT_JSON', 'application/json');
+    const { url, close } = await startServer(
+      200,
+      'NOT_JSON',
+      'application/json',
+    );
     try {
-      await expect(runCli(['-u', url, '-d', out], cwd)).rejects.toBeTruthy();
+      await expect(runCli(['-u', url, '-d', out], cwd)).rejects.toMatchObject({
+        stderr: expect.stringContaining('Error durante la generación:'),
+      });
     } finally {
       await close();
     }
@@ -162,7 +200,13 @@ describe('CLI integration', () => {
     const cwd: string = process.cwd();
     const fixture: string = path.join(cwd, 'test', 'fixtures', 'minimal.json');
 
-    await expect(runCli(['-f', fixture, '-d', '   '], cwd)).rejects.toBeTruthy();
+    await expect(
+      runCli(['-f', fixture, '-d', '   '], cwd),
+    ).rejects.toMatchObject({
+      stderr: expect.stringContaining(
+        'Debes indicar un directorio de salida válido (-d)',
+      ),
+    });
   });
 
   it('fails when swagger json root is not an object (URL returns null)', async () => {
@@ -171,7 +215,11 @@ describe('CLI integration', () => {
 
     const { url, close } = await startServer(200, 'null', 'application/json');
     try {
-      await expect(runCli(['-u', url, '-d', out], cwd)).rejects.toBeTruthy();
+      await expect(runCli(['-u', url, '-d', out], cwd)).rejects.toMatchObject({
+        stderr: expect.stringContaining(
+          'Swagger JSON inválido: se esperaba un objeto JSON en la raíz',
+        ),
+      });
     } finally {
       await close();
     }

@@ -108,12 +108,13 @@ npm run start -- -f ./swagger.json -d src/api
 🧪 Tests
 
 Este proyecto usa Vitest y snapshots para validar el código generado.
+Los comandos de test compilan primero la CLI para ejecutar también las pruebas de integración.
+
+# Ejecutar todos los tests una sola vez
+npm test
 
 # Ejecutar tests en modo watch
-npm run test
-
-# Ejecutar tests una sola vez
-npm run test:run
+npm run test:watch
 
 # Actualizar snapshots (cuando cambie el output del generador de forma intencional)
 npm run test:update
@@ -129,3 +130,4 @@ Si cambias el generador y el cambio es intencional, ejecuta npm run test:update 
 
 MIT
 
+```

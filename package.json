@@ -1,60 +1,66 @@
 {
-	"name": "@osumi/swagger-to-angular",
-	"version": "1.2.0",
-	"description": "Utilidad CLI para generar servicios Angular desde Swagger",
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/osumionline/swagger-to-angular.git"
-	},
-	"keywords": [
-		"swagger",
-		"angular",
-		"osumi"
-	],
-	"author": "Iñigo Gorosabel",
-	"license": "MIT",
-	"bugs": {
-		"url": "https://github.com/osumionline/swagger-to-angular/issues"
-	},
-	"homepage": "https://github.com/osumionline/swagger-to-angular#readme",
-	"type": "module",
-	"bin": {
-		"swagger-to-angular": "./dist/bin/cli.js"
-	},
-	"main": "dist/bin/cli.js",
-	"files": [
-		"dist",
-		"README.md"
-	],
-	"scripts": {
-		"build": "tsc",
-		"start": "node dist/bin/cli.js",
-		"lint": "eslint .",
-		"lint:fix": "eslint . --fix",
-		"test": "vitest",
-		"test:run": "vitest run",
-		"test:update": "vitest -u",
-		"test:coverage": "vitest run --coverage",
-		"test:ci": "npm run build && npm run test:run"
-	},
-	"dependencies": {
-		"commander": "^15.0.0"
-	},
-	"devDependencies": {
-		"@eslint/js": "^10.0.1",
-		"@types/node": "^24.10.13",
-		"@typescript-eslint/eslint-plugin": "^8.67.0",
-		"@typescript-eslint/parser": "^8.67.0",
-		"@vitest/coverage-v8": "^4.1.11",
-		"eslint": "^10.8.1",
-		"typescript": "^6.0.3",
-		"typescript-eslint": "^8.67.0",
-		"vitest": "^4.1.11"
-	},
-	"publishConfig": {
-		"access": "public"
-	},
-	"engines": {
-		"node": ">=24"
-	}
+  "name": "@osumi/swagger-to-angular",
+  "version": "1.2.0",
+  "description": "Utilidad CLI para generar servicios Angular desde Swagger",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/osumionline/swagger-to-angular.git"
+  },
+  "keywords": [
+    "swagger",
+    "angular",
+    "osumi"
+  ],
+  "author": "Iñigo Gorosabel",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/osumionline/swagger-to-angular/issues"
+  },
+  "homepage": "https://github.com/osumionline/swagger-to-angular#readme",
+  "type": "module",
+  "bin": {
+    "swagger-to-angular": "./dist/bin/cli.js"
+  },
+  "main": "dist/bin/cli.js",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/bin/cli.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "pretest": "npm run build",
+    "test": "vitest run",
+    "pretest:watch": "npm run build",
+    "test:watch": "vitest",
+    "pretest:run": "npm run build",
+    "test:run": "vitest run",
+    "pretest:update": "npm run build",
+    "test:update": "vitest -u",
+    "pretest:coverage": "npm run build",
+    "test:coverage": "vitest run --coverage",
+    "test:ci": "npm run test:run"
+  },
+  "dependencies": {
+    "commander": "^15.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.10.13",
+    "@typescript-eslint/eslint-plugin": "^8.71.1",
+    "@typescript-eslint/parser": "^8.71.1",
+    "@vitest/coverage-v8": "^5.0.3",
+    "eslint": "^10.12.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.1",
+    "vitest": "^5.0.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=24"
+  }
 }
