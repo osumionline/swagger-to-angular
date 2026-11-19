@@ -24,6 +24,16 @@ type HttpMethod =
   | 'patch';
 
 /**
+ * Header parameter names that OpenAPI requires generators
+ * to ignore in parameter definitions.
+ */
+const IGNORED_HEADER_NAMES: ReadonlySet<string> = new Set<string>([
+  'accept',
+  'content-type',
+  'authorization',
+]);
+
+/**
  * Checks whether a path item key identifies a supported
  * HTTP operation rather than OpenAPI metadata.
  *
@@ -43,17 +53,17 @@ function isSupportedHttpMethod(method: string): method is HttpMethod {
 }
 
 /**
- * Formats an OpenAPI query parameter name as a TypeScript
+ * Formats an OpenAPI HTTP parameter name as a TypeScript
  * string literal.
  *
  * Simple names retain single quotes for compatibility
- * with the existing generated output.
+ * with existing generated output.
  * Other names are safely escaped using JSON.stringify.
  *
- * @param name Original OpenAPI query parameter name.
+ * @param name Original HTTP parameter name.
  * @returns Escaped TypeScript string literal.
  */
-function formatQueryParameterKey(name: string): string {
+function formatHttpParameterKey(name: string): string {
   const isSimpleName: boolean = /^[A-Za-z0-9_$.-]+$/.test(name);
 
   return isSimpleName ? `'${name}'` : JSON.stringify(name);
@@ -72,6 +82,8 @@ function formatQueryParameterKey(name: string): string {
  * HTTP parameter names are converted into valid, unique
  * TypeScript identifiers while preserving their original
  * names in outgoing requests.
+ *
+ * Supports path, query and header parameters.
  *
  * Operation identifiers are converted into valid and unique
  * service method names.
@@ -149,6 +161,15 @@ export default function generateMethods(
         },
       );
 
+      const headerParams: SwaggerParameter[] = parameters.filter(
+        (param: SwaggerParameter): boolean => {
+          return (
+            param.in === 'header' &&
+            !IGNORED_HEADER_NAMES.has(param.name.toLowerCase())
+          );
+        },
+      );
+
       const requiredArgs: string[] = [];
       const optionalArgs: string[] = [];
 
@@ -192,10 +213,33 @@ export default function generateMethods(
           optionalArgs.push(argument);
         }
 
-        const queryKey: string = formatQueryParameterKey(param.name);
+        const queryKey: string = formatHttpParameterKey(param.name);
 
         queryParamSets.push(
           `    if (${argumentName} !== undefined) {\n      params = params.set(${queryKey}, String(${argumentName}));\n    }`,
+        );
+      }
+
+      const headerParamSets: string[] = [];
+
+      for (const param of headerParams) {
+        const type: string = mapSwaggerSchemaToTs(param.schema ?? {});
+        const isRequired: boolean = param.required === true;
+
+        const argumentName: string = createParameterName(param, usedNames);
+
+        const argument: string = `${argumentName}${isRequired ? '' : '?'}: ${type}`;
+
+        if (isRequired) {
+          requiredArgs.push(argument);
+        } else {
+          optionalArgs.push(argument);
+        }
+
+        const headerKey: string = formatHttpParameterKey(param.name);
+
+        headerParamSets.push(
+          `    if (${argumentName} !== undefined) {\n      headers[${headerKey}] = String(${argumentName});\n    }`,
         );
       }
 
@@ -223,15 +267,24 @@ export default function generateMethods(
       const url: string = `\${this.${basePathName}}${interpolatedPath}`;
 
       const hasQuery: boolean = queryParamSets.length > 0;
+      const hasHeaders: boolean = headerParamSets.length > 0;
 
       const paramsPrelude: string = hasQuery
         ? `    let params = new HttpParams();\n${queryParamSets.join('\n')}\n`
+        : '';
+
+      const headersPrelude: string = hasHeaders
+        ? `    const headers: Record<string, string> = {};\n${headerParamSets.join('\n')}\n`
         : '';
 
       const optionsParts: string[] = [];
 
       if (hasQuery) {
         optionsParts.push('params');
+      }
+
+      if (hasHeaders) {
+        optionsParts.push('headers');
       }
 
       if (isBinary) {
@@ -293,7 +346,7 @@ export default function generateMethods(
    * Auto-generated method for operationId: ${operationIdComment}
    */
   ${methodName}(${argsList.join(', ')}): Observable<${returnType}> {
-${paramsPrelude}${optionsDecl}    return this.http
+${paramsPrelude}${headersPrelude}${optionsDecl}    return this.http
       ${httpCall}
       .pipe(catchError(this.handleError));
   }`;

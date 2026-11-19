@@ -7,6 +7,7 @@ import type { SwaggerParameter } from './types.js';
  */
 const RESERVED_PARAMETER_NAMES: ReadonlySet<string> = new Set<string>([
   'params',
+  'headers',
   'options',
   'payload',
   'arguments',
