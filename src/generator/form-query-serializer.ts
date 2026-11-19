@@ -1,3 +1,4 @@
+import validateQueryParameterShape from './query-shape-validator.js';
 import type { SwaggerParameter, SwaggerSchema } from './types.js';
 
 /**
@@ -9,6 +10,9 @@ import type { SwaggerParameter, SwaggerSchema } from './types.js';
  *
  * Form objects and arrays are handled when explode=false.
  * Delimited arrays use the default explode=false behavior.
+ *
+ * Explicitly nested values are rejected by the shared
+ * query shape validator.
  *
  * Other serialization modes return null and continue
  * using Angular HttpParams.
@@ -23,6 +27,8 @@ export default function generateEncodedFormQueryCode(
   argumentName: string,
   queryKey: string,
 ): string | null {
+  validateQueryParameterShape(parameter);
+
   const style: string = parameter.style ?? 'form';
 
   const schema: SwaggerSchema | undefined = parameter.schema;

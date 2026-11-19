@@ -1,8 +1,8 @@
+import validateQueryParameterShape from './query-shape-validator.js';
 import type { SwaggerParameter, SwaggerSchema } from './types.js';
 
 /**
- * Checks whether an OpenAPI schema describes an object
- * supported by the query serializer.
+ * Checks whether an OpenAPI schema describes an object.
  *
  * Also accepts schemas with object properties when the
  * explicit type field is omitted.
@@ -24,44 +24,6 @@ function isObjectSchema(schema: SwaggerSchema | undefined): boolean {
 }
 
 /**
- * Checks whether an object query parameter contains
- * explicitly nested or composed property schemas that
- * are not supported by the current serializer.
- *
- * @param parameter OpenAPI query parameter definition.
- * @returns True when unsupported nested values are present.
- */
-function hasUnsupportedNestedValues(parameter: SwaggerParameter): boolean {
-  const schema: SwaggerSchema | undefined = parameter.schema;
-
-  if (schema === undefined) {
-    return false;
-  }
-
-  const values: SwaggerSchema[] = Object.values(schema.properties ?? {});
-
-  if (
-    schema.additionalProperties !== undefined &&
-    typeof schema.additionalProperties === 'object'
-  ) {
-    values.push(schema.additionalProperties);
-  }
-
-  return values.some((value: SwaggerSchema): boolean => {
-    return (
-      value.type === 'array' ||
-      value.type === 'object' ||
-      value.items !== undefined ||
-      value.properties !== undefined ||
-      value.additionalProperties !== undefined ||
-      value.oneOf !== undefined ||
-      value.anyOf !== undefined ||
-      value.allOf !== undefined
-    );
-  });
-}
-
-/**
  * Generates TypeScript statements for an object-valued
  * OpenAPI query parameter.
  *
@@ -70,8 +32,9 @@ function hasUnsupportedNestedValues(parameter: SwaggerParameter): boolean {
  * - form with explode=false
  * - deepObject with explode=true
  *
- * Unsupported styles and explicitly nested values are
- * rejected rather than serialized incorrectly.
+ * Unsupported styles are rejected.
+ * Value shapes are validated by the public entry point
+ * before this function is called.
  *
  * @param parameter OpenAPI query parameter definition.
  * @param argumentName Generated TypeScript argument name.
@@ -83,12 +46,6 @@ function generateObjectQueryParameterCode(
   argumentName: string,
   queryKey: string,
 ): string {
-  if (hasUnsupportedNestedValues(parameter)) {
-    throw new Error(
-      `Unsupported nested query object parameter: ${parameter.name}`,
-    );
-  }
-
   const style: string = parameter.style ?? 'form';
 
   const condition: string = `${argumentName} !== undefined && ${argumentName} !== null`;
@@ -149,7 +106,8 @@ function generateObjectQueryParameterCode(
  * repeated parameter names through HttpParams.append().
  *
  * Flat objects support form and deepObject serialization.
- * Unsupported object styles and nested values are rejected.
+ * Explicitly nested values are rejected by the shared
+ * query shape validator.
  *
  * Null and undefined array/object parameters are omitted.
  *
@@ -163,6 +121,8 @@ export default function generateQueryParameterCode(
   argumentName: string,
   queryKey: string,
 ): string {
+  validateQueryParameterShape(parameter);
+
   if (isObjectSchema(parameter.schema)) {
     return generateObjectQueryParameterCode(parameter, argumentName, queryKey);
   }
