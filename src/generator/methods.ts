@@ -1,3 +1,4 @@
+import createOperationName from './operation-name.js';
 import createParameterName from './parameter-name.js';
 import mergeParameters from './parameters.js';
 import getResponseInfo from './response-info.js';
@@ -72,6 +73,9 @@ function formatQueryParameterKey(name: string): string {
  * TypeScript identifiers while preserving their original
  * names in outgoing requests.
  *
+ * Operation identifiers are converted into valid and unique
+ * service method names.
+ *
  * @param paths Collection of OpenAPI paths and operations.
  * @param basePathName Environment property containing the API base URL.
  * @returns TypeScript source code for the generated service methods.
@@ -81,6 +85,7 @@ export default function generateMethods(
   basePathName: string,
 ): string {
   const methods: string[] = [];
+  const usedMethodNames: Set<string> = new Set<string>();
 
   for (const [rawPath, pathItem] of Object.entries(paths)) {
     const pathParameters: SwaggerParameter[] = Array.isArray(
@@ -104,6 +109,17 @@ export default function generateMethods(
 
       const operationId: string =
         def.operationId ?? `${httpMethod}_${rawPath.replace(/[/{}/]/g, '_')}`;
+
+      const methodName: string = createOperationName(
+        operationId,
+        httpMethod,
+        basePathName,
+        usedMethodNames,
+      );
+
+      const operationIdComment: string = operationId
+        .replace(/\*\//g, '* /')
+        .replace(/[\r\n\u2028\u2029]/g, ' ');
 
       const responseInfo: SwaggerResponseInfo = getResponseInfo(def);
 
@@ -274,9 +290,9 @@ export default function generateMethods(
 
       const method: string = `
   /**
-   * Auto-generated method for operationId: ${operationId}
+   * Auto-generated method for operationId: ${operationIdComment}
    */
-  ${operationId}(${argsList.join(', ')}): Observable<${returnType}> {
+  ${methodName}(${argsList.join(', ')}): Observable<${returnType}> {
 ${paramsPrelude}${optionsDecl}    return this.http
       ${httpCall}
       .pipe(catchError(this.handleError));
