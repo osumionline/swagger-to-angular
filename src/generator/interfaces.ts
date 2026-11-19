@@ -1,5 +1,6 @@
 import formatPropertyName from './property-name.js';
 import { mapSwaggerSchemaToTs } from './schema-mapper.js';
+import formatSchemaName from './schema-name.js';
 import type { SwaggerSchema } from './types.js';
 
 /**
@@ -8,7 +9,9 @@ import type { SwaggerSchema } from './types.js';
  *
  * Respects the required property list of each schema.
  * Properties not included in this list are optional.
- * Property names are formatted as valid TypeScript keys.
+ *
+ * Property names are formatted as valid TypeScript keys,
+ * and schema names as valid TypeScript identifiers.
  *
  * @param schemas Collection of named OpenAPI schemas.
  * @returns Generated TypeScript interface declarations.
@@ -19,7 +22,9 @@ export default function generateInterfaces(
   const lines: string[] = [];
 
   for (const [name, schema] of Object.entries(schemas)) {
-    lines.push(`export interface ${name} {`);
+    const interfaceName: string = formatSchemaName(name);
+
+    lines.push(`export interface ${interfaceName} {`);
 
     const props: Record<string, SwaggerSchema> = schema.properties ?? {};
 

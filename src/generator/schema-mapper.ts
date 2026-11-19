@@ -1,4 +1,5 @@
 import formatPropertyName from './property-name.js';
+import formatSchemaName from './schema-name.js';
 import type { SwaggerSchema } from './types.js';
 
 /**
@@ -176,15 +177,51 @@ export function mapSwaggerSchemaToTsNonNullable(schema: SwaggerSchema): string {
 }
 
 /**
- * Extracts the schema name from an OpenAPI reference.
+ * Extracts a TypeScript schema name from a reference.
  *
- * @param ref OpenAPI reference, such as "#/components/schemas/User".
- * @returns Referenced schema name or "any" when empty.
+ * Supports local references to components.schemas,
+ * including URI decoding and JSON Pointer escape sequences.
+ *
+ * Unsupported or invalid references return "any".
+ *
+ * @param ref OpenAPI schema reference or standalone schema name.
+ * @returns Valid TypeScript schema identifier, or "any".
  */
 export function extractRefName(ref: string): string {
-  const last: string = ref.split('/').pop() ?? '';
+  const schemaPrefix: string = '#/components/schemas/';
 
-  return last === '' ? 'any' : last;
+  if (ref.startsWith(schemaPrefix)) {
+    const encodedName: string = ref.slice(schemaPrefix.length);
+
+    if (encodedName === '' || encodedName.includes('/')) {
+      return 'any';
+    }
+
+    try {
+      const decodedName: string = decodeURIComponent(encodedName);
+
+      const invalidPointer: boolean =
+        decodedName.includes('/') || /~(?![01])/.test(decodedName);
+
+      if (invalidPointer) {
+        return 'any';
+      }
+
+      const unescapedName: string = decodedName
+        .replace(/~1/g, '/')
+        .replace(/~0/g, '~');
+
+      return formatSchemaName(unescapedName);
+    } catch {
+      return 'any';
+    }
+  }
+
+  if (ref === '' || ref.includes('/') || ref.startsWith('#')) {
+    return 'any';
+  }
+
+  return formatSchemaName(ref);
 }
 
 /**
