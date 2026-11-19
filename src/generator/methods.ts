@@ -1,3 +1,4 @@
+import generateAllowReservedQueryCode from './allow-reserved-serializer.js';
 import generateEncodedFormQueryCode from './form-query-serializer.js';
 import createOperationName from './operation-name.js';
 import createParameterName from './parameter-name.js';
@@ -218,11 +219,15 @@ export default function generateMethods(
 
         const queryKey: string = formatHttpParameterKey(param.name);
 
-        const encodedCode: string | null = generateEncodedFormQueryCode(
+        const reservedCode: string | null = generateAllowReservedQueryCode(
           param,
           argumentName,
           queryKey,
         );
+
+        const encodedCode: string | null =
+          reservedCode ??
+          generateEncodedFormQueryCode(param, argumentName, queryKey);
 
         if (encodedCode !== null) {
           hasEncodedFormQuery = true;

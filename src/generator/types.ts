@@ -60,6 +60,7 @@ export interface SwaggerParameter {
   schema?: SwaggerSchema;
   style?: SwaggerParameterStyle;
   explode?: boolean;
+  allowReserved?: boolean;
 }
 
 /**
