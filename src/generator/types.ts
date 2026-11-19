@@ -57,16 +57,30 @@ interface SwaggerRequestBody {
 }
 
 /**
+ * Definition of an OpenAPI response.
+ */
+export interface SwaggerResponse {
+  description?: string;
+  content?: Record<string, { schema?: SwaggerSchema }>;
+}
+
+/**
+ * Resolved TypeScript information for a successful
+ * OpenAPI response.
+ */
+export interface SwaggerResponseInfo {
+  returnType: string;
+  isBinary: boolean;
+}
+
+/**
  * Definition of an OpenAPI operation.
  */
 export interface SwaggerOperation {
   operationId?: string;
   parameters?: SwaggerParameter[];
   requestBody?: SwaggerRequestBody;
-  responses?: Record<
-    string,
-    { content?: Record<string, { schema?: SwaggerSchema }> }
-  >;
+  responses?: Record<string, SwaggerResponse>;
 }
 
 /**

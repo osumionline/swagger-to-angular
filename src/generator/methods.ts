@@ -1,9 +1,11 @@
 import mergeParameters from './parameters.js';
+import getResponseInfo from './response-info.js';
 import { mapSwaggerSchemaToTs } from './schema-mapper.js';
 import type {
   SwaggerOperation,
   SwaggerParameter,
   SwaggerPaths,
+  SwaggerResponseInfo,
   SwaggerSchema,
 } from './types.js';
 
@@ -45,6 +47,7 @@ function isSupportedHttpMethod(method: string): method is HttpMethod {
  * Combines path-level and operation-level parameters,
  * allowing operation parameters to override inherited ones.
  * Required arguments are placed before optional arguments.
+ * Response types are resolved from documented success statuses.
  *
  * @param paths Collection of OpenAPI paths and operations.
  * @param basePathName Environment property containing the API base URL.
@@ -79,21 +82,10 @@ export default function generateMethods(
       const operationId: string =
         def.operationId ?? `${httpMethod}_${rawPath.replace(/[/{}/]/g, '_')}`;
 
-      const responses200Content: Record<string, { schema?: SwaggerSchema }> =
-        def.responses?.['200']?.content ?? {};
+      const responseInfo: SwaggerResponseInfo = getResponseInfo(def);
 
-      const contentType: string =
-        Object.keys(responses200Content)[0] ?? 'application/json';
-
-      const isBinary: boolean =
-        contentType === 'application/pdf' ||
-        contentType === 'application/octet-stream';
-
-      const returnType: string = isBinary
-        ? 'ArrayBuffer'
-        : mapSwaggerSchemaToTs(
-            responses200Content['application/json']?.schema ?? {},
-          );
+      const returnType: string = responseInfo.returnType;
+      const isBinary: boolean = responseInfo.isBinary;
 
       const operationParameters: SwaggerParameter[] = Array.isArray(
         def.parameters,

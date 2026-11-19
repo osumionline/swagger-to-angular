@@ -475,9 +475,9 @@ export class No200Service {
   /**
    * Auto-generated method for operationId: getNo200
    */
-  getNo200(): Observable<any> {
+  getNo200(): Observable<void> {
     return this.http
-      .get<any>(\`\${this.basePathNo200}/v1/no200\`, {})
+      .get<void>(\`\${this.basePathNo200}/v1/no200\`, {})
       .pipe(catchError(this.handleError));
   }
 
