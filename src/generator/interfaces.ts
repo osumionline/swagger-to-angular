@@ -4,17 +4,19 @@ import formatSchemaName from './schema-name.js';
 import type { SwaggerSchema } from './types.js';
 
 /**
- * Generates TypeScript interfaces from the schemas
+ * Generates TypeScript declarations from the schemas
  * defined in the OpenAPI components section.
  *
- * Respects the required property list of each schema.
- * Properties not included in this list are optional.
+ * Plain object schemas are generated as interfaces.
+ * Arrays, primitives, enums, compositions, references,
+ * nullable objects and dictionaries use type aliases.
  *
- * Property names are formatted as valid TypeScript keys,
- * and schema names as valid TypeScript identifiers.
+ * Required properties are preserved in interfaces,
+ * and property and schema names are formatted as
+ * valid TypeScript identifiers.
  *
  * @param schemas Collection of named OpenAPI schemas.
- * @returns Generated TypeScript interface declarations.
+ * @returns Generated TypeScript declarations.
  */
 export default function generateInterfaces(
   schemas: Record<string, SwaggerSchema>,
@@ -22,9 +24,33 @@ export default function generateInterfaces(
   const lines: string[] = [];
 
   for (const [name, schema] of Object.entries(schemas)) {
-    const interfaceName: string = formatSchemaName(name);
+    const typeName: string = formatSchemaName(name);
 
-    lines.push(`export interface ${interfaceName} {`);
+    const hasEnum: boolean =
+      Array.isArray(schema.enum) && schema.enum.length > 0;
+
+    const hasComposition: boolean =
+      (Array.isArray(schema.oneOf) && schema.oneOf.length > 0) ||
+      (Array.isArray(schema.anyOf) && schema.anyOf.length > 0) ||
+      (Array.isArray(schema.allOf) && schema.allOf.length > 0);
+
+    const useInterface: boolean =
+      (schema.type === 'object' || schema.type === undefined) &&
+      schema.$ref === undefined &&
+      schema.nullable !== true &&
+      schema.additionalProperties === undefined &&
+      !hasEnum &&
+      !hasComposition;
+
+    if (!useInterface) {
+      const type: string = mapSwaggerSchemaToTs(schema);
+
+      lines.push(`export type ${typeName} = ${type};\n`);
+
+      continue;
+    }
+
+    lines.push(`export interface ${typeName} {`);
 
     const props: Record<string, SwaggerSchema> = schema.properties ?? {};
 
