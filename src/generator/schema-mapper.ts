@@ -75,7 +75,20 @@ export function mapSwaggerSchemaToTsNonNullable(schema: SwaggerSchema): string {
 
   if (schema.type === 'array') {
     const items: SwaggerSchema = schema.items ?? {};
-    return `${mapSwaggerSchemaToTs(items)}[]`;
+    const itemType: string = mapSwaggerSchemaToTs(items);
+
+    const requiresParentheses: boolean =
+      items.nullable === true ||
+      (Array.isArray(items.enum) && items.enum.length > 1) ||
+      (Array.isArray(items.oneOf) && items.oneOf.length > 0) ||
+      (Array.isArray(items.anyOf) && items.anyOf.length > 0) ||
+      (Array.isArray(items.allOf) && items.allOf.length > 0);
+
+    const formattedItemType: string = requiresParentheses
+      ? `(${itemType})`
+      : itemType;
+
+    return `${formattedItemType}[]`;
   }
 
   if (schema.type === 'object') {
