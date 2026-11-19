@@ -258,7 +258,7 @@ describe('OpenAPI query parameter serialization', (): void => {
     );
 
     expect(content).toContain(
-      `params = params.set('ids', ids.map((value): string => String(value)).join(","));`,
+      "querySegments.push(encodeURIComponent('ids') + '=' + encodedValues.join(','));",
     );
 
     expect(content).toContain("params = params.set('active', String(active));");
@@ -592,15 +592,13 @@ describe('OpenAPI query parameter serialization', (): void => {
     );
 
     expect(content).toContain(
-      "params = params.set('filter', entries.join(','));",
+      "querySegments.push(encodeURIComponent('filter') + '=' + encodedEntries.join(','));",
     );
 
     expect(content).toContain(
       "params = params.append('options' + '[' + key + ']', String(value));",
     );
 
-    expect(content).toContain(
-      '.get<boolean>(`${this.basePathApi}/v1/items`, options)',
-    );
+    expect(content).toContain('.get<boolean>(finalUrl, options)');
   });
 });

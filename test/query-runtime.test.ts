@@ -199,10 +199,9 @@ describe('Generated query runtime serialization', (): void => {
       [[10, 20, 30]],
     );
 
-    expect(request.params.get('ids')).toBe('10,20,30');
-    expect(request.params.getAll('ids')).toEqual(['10,20,30']);
+    expect(request.url).toBe('https://example.com/api/v1/search?ids=10,20,30');
 
-    expect(request.params.toString()).toBe('ids=10,20,30');
+    expect(request.params.toString()).toBe('');
   });
 
   it('serializes spaceDelimited and pipeDelimited arrays', (): void => {
@@ -315,13 +314,13 @@ describe('Generated query runtime serialization', (): void => {
       ],
     );
 
-    expect(request.params.get('filter')).toBe('role,admin,active,true');
-
-    expect(request.params.get('sort')).toBe('field,name,descending,false');
-
-    expect(request.params.toString()).toBe(
-      'filter=role,admin,active,true&sort=field,name,descending,false',
+    expect(request.url).toBe(
+      'https://example.com/api/v1/search?' +
+        'filter=role,admin,active,true&' +
+        'sort=field,name,descending,false',
     );
+
+    expect(request.params.toString()).toBe('');
   });
 
   it('serializes deepObject keys and special characters', (): void => {

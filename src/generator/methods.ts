@@ -1,3 +1,4 @@
+import generateEncodedFormQueryCode from './form-query-serializer.js';
 import createOperationName from './operation-name.js';
 import createParameterName from './parameter-name.js';
 import mergeParameters from './parameters.js';
@@ -80,15 +81,14 @@ function formatHttpParameterKey(name: string): string {
  * Required arguments are placed before optional arguments.
  * Response types are resolved from documented success statuses.
  *
- * HTTP parameter names are converted into valid, unique
- * TypeScript identifiers while preserving their original
- * names in outgoing requests.
+ * Parameter names and operation identifiers are converted
+ * into valid and unique TypeScript identifiers.
  *
  * Supports path, query and header parameters.
- * Query arrays use their OpenAPI serialization settings.
  *
- * Operation identifiers are converted into valid and unique
- * service method names.
+ * Non-exploded form arrays and objects are serialized
+ * into URL segments with their values encoded individually.
+ * Other query parameters use Angular HttpParams.
  *
  * @param paths Collection of OpenAPI paths and operations.
  * @param basePathName Environment property containing the API base URL.
@@ -200,6 +200,7 @@ export default function generateMethods(
       }
 
       const queryParamSets: string[] = [];
+      let hasEncodedFormQuery: boolean = false;
 
       for (const param of queryParams) {
         const type: string = mapSwaggerSchemaToTs(param.schema ?? {});
@@ -217,9 +218,20 @@ export default function generateMethods(
 
         const queryKey: string = formatHttpParameterKey(param.name);
 
-        queryParamSets.push(
-          generateQueryParameterCode(param, argumentName, queryKey),
+        const encodedCode: string | null = generateEncodedFormQueryCode(
+          param,
+          argumentName,
+          queryKey,
         );
+
+        if (encodedCode !== null) {
+          hasEncodedFormQuery = true;
+          queryParamSets.push(encodedCode);
+        } else {
+          queryParamSets.push(
+            generateQueryParameterCode(param, argumentName, queryKey),
+          );
+        }
       }
 
       const headerParamSets: string[] = [];
@@ -241,7 +253,9 @@ export default function generateMethods(
         const headerKey: string = formatHttpParameterKey(param.name);
 
         headerParamSets.push(
-          `    if (${argumentName} !== undefined) {\n      headers[${headerKey}] = String(${argumentName});\n    }`,
+          `    if (${argumentName} !== undefined) {\n` +
+            `      headers[${headerKey}] = String(${argumentName});\n` +
+            `    }`,
         );
       }
 
@@ -271,12 +285,27 @@ export default function generateMethods(
       const hasQuery: boolean = queryParamSets.length > 0;
       const hasHeaders: boolean = headerParamSets.length > 0;
 
+      const querySegmentsPrelude: string = hasEncodedFormQuery
+        ? '    const querySegments: string[] = [];\n'
+        : '';
+
       const paramsPrelude: string = hasQuery
-        ? `    let params = new HttpParams();\n${queryParamSets.join('\n')}\n`
+        ? `    let params = new HttpParams();\n` +
+          `${queryParamSets.join('\n')}\n`
         : '';
 
       const headersPrelude: string = hasHeaders
-        ? `    const headers: Record<string, string> = {};\n${headerParamSets.join('\n')}\n`
+        ? `    const headers: Record<string, string> = {};\n` +
+          `${headerParamSets.join('\n')}\n`
+        : '';
+
+      const requestUrlPrelude: string = hasEncodedFormQuery
+        ? `    const requestUrl: string = \`${url}\`;\n` +
+          `    const encodedQuery: string = querySegments.join('&');\n` +
+          `    const separator: string = requestUrl.includes('?')` +
+          ` ? '&' : '?';\n` +
+          `    const finalUrl: string = encodedQuery.length > 0` +
+          ` ? requestUrl + separator + encodedQuery : requestUrl;\n`
         : '';
 
       const optionsParts: string[] = [];
@@ -295,10 +324,16 @@ export default function generateMethods(
 
       const optionsDecl: string =
         optionsParts.length > 0
-          ? `    const options = {\n      ${optionsParts.join(',\n      ')}\n    };\n`
+          ? `    const options = {\n` +
+            `      ${optionsParts.join(',\n      ')}\n` +
+            `    };\n`
           : '';
 
       const optionsArg: string = optionsParts.length > 0 ? 'options' : '{}';
+
+      const urlArgument: string = hasEncodedFormQuery
+        ? 'finalUrl'
+        : `\`${url}\``;
 
       let httpCall: string;
 
@@ -308,9 +343,10 @@ export default function generateMethods(
         httpMethod === 'options'
       ) {
         if (isBinary) {
-          httpCall = `.${httpMethod}(\`${url}\`, ${optionsArg})`;
+          httpCall = `.${httpMethod}(${urlArgument}, ${optionsArg})`;
         } else {
-          httpCall = `.${httpMethod}<${returnType}>(\`${url}\`, ${optionsArg})`;
+          httpCall =
+            `.${httpMethod}<${returnType}>` + `(${urlArgument}, ${optionsArg})`;
         }
       } else if (httpMethod === 'delete') {
         if (hasPayload) {
@@ -320,21 +356,23 @@ export default function generateMethods(
               : '{ body: payload }';
 
           if (isBinary) {
-            httpCall = `.delete(\`${url}\`, ${deleteOptions})`;
+            httpCall = `.delete(${urlArgument}, ${deleteOptions})`;
           } else {
-            httpCall = `.delete<${returnType}>(\`${url}\`, ${deleteOptions})`;
+            httpCall =
+              `.delete<${returnType}>` + `(${urlArgument}, ${deleteOptions})`;
           }
         } else {
           if (isBinary) {
-            httpCall = `.delete(\`${url}\`, ${optionsArg})`;
+            httpCall = `.delete(${urlArgument}, ${optionsArg})`;
           } else {
-            httpCall = `.delete<${returnType}>(\`${url}\`, ${optionsArg})`;
+            httpCall =
+              `.delete<${returnType}>` + `(${urlArgument}, ${optionsArg})`;
           }
         }
       } else {
         const requestBodyArgument: string = hasPayload ? 'payload, ' : 'null, ';
 
-        const httpArguments: string = `\`${url}\`, ${requestBodyArgument}${optionsArg}`;
+        const httpArguments: string = `${urlArgument}, ${requestBodyArgument}${optionsArg}`;
 
         if (isBinary) {
           httpCall = `.${httpMethod}(${httpArguments})`;
@@ -348,7 +386,7 @@ export default function generateMethods(
    * Auto-generated method for operationId: ${operationIdComment}
    */
   ${methodName}(${argsList.join(', ')}): Observable<${returnType}> {
-${paramsPrelude}${headersPrelude}${optionsDecl}    return this.http
+${querySegmentsPrelude}${paramsPrelude}${headersPrelude}${requestUrlPrelude}${optionsDecl}    return this.http
       ${httpCall}
       .pipe(catchError(this.handleError));
   }`;

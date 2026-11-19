@@ -10,6 +10,11 @@ const RESERVED_PARAMETER_NAMES: ReadonlySet<string> = new Set<string>([
   'headers',
   'options',
   'payload',
+  'querySegments',
+  'requestUrl',
+  'encodedQuery',
+  'separator',
+  'finalUrl',
   'arguments',
   'eval',
 ]);
