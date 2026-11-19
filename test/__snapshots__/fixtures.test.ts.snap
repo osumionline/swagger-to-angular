@@ -704,7 +704,7 @@ export class PostnobodyService {
    */
   postPing(): Observable<string> {
     return this.http
-      .post<string>(\`\${this.basePathPostnobody}/v1/ping\`, {})
+      .post<string>(\`\${this.basePathPostnobody}/v1/ping\`, null, {})
       .pipe(catchError(this.handleError));
   }
 

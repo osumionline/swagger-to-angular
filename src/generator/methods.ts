@@ -22,7 +22,8 @@ export default function generateMethods(
       const operationId: string =
         def.operationId ?? `${httpMethod}_${rawPath.replace(/[/{}/]/g, '_')}`;
 
-      const responses200Content = def.responses?.['200']?.content ?? {};
+      const responses200Content: Record<string, { schema?: SwaggerSchema }> =
+        def.responses?.['200']?.content ?? {};
 
       const contentType: string =
         Object.keys(responses200Content)[0] ?? 'application/json';
@@ -57,7 +58,6 @@ export default function generateMethods(
 
       for (const param of pathParams) {
         const type: string = mapSwaggerSchemaToTs(param.schema ?? {});
-
         const optional: boolean = param.required === false;
 
         argsList.push(`${param.name}${optional ? '?' : ''}: ${type}`);
@@ -75,19 +75,15 @@ export default function generateMethods(
         );
       }
 
-      const requestBody = def.requestBody;
-
-      const requestBodyRequired: boolean = requestBody?.required === true;
+      const requestBodyRequired: boolean = def.requestBody?.required === true;
 
       const bodySchema: SwaggerSchema | undefined =
-        requestBody?.content?.['application/json']?.schema;
+        def.requestBody?.content?.['application/json']?.schema;
 
-      const hasPayload: boolean = !!bodySchema;
+      const hasPayload: boolean = bodySchema !== undefined;
 
-      const bodyUsage: string | undefined = hasPayload ? 'payload' : undefined;
-
-      if (hasPayload) {
-        const bodyType: string = mapSwaggerSchemaToTs(bodySchema ?? {});
+      if (bodySchema !== undefined) {
+        const bodyType: string = mapSwaggerSchemaToTs(bodySchema);
 
         argsList.push(`payload${requestBodyRequired ? '' : '?'}: ${bodyType}`);
       }
@@ -138,8 +134,8 @@ export default function generateMethods(
         if (hasPayload) {
           const deleteOptions: string =
             optionsParts.length > 0
-              ? `{ body: ${bodyUsage}, ...options }`
-              : `{ body: ${bodyUsage} }`;
+              ? '{ body: payload, ...options }'
+              : '{ body: payload }';
 
           if (isBinary) {
             httpCall = `.delete(\`${url}\`, ${deleteOptions})`;
@@ -154,18 +150,23 @@ export default function generateMethods(
           }
         }
       } else {
-        if (hasPayload) {
-          if (isBinary) {
-            httpCall = `.${httpMethod}(\`${url}\`, ${bodyUsage}, ${optionsArg})`;
-          } else {
-            httpCall = `.${httpMethod}<${returnType}>(\`${url}\`, ${bodyUsage}, ${optionsArg})`;
-          }
+        const requiresBodyArgument: boolean =
+          httpMethod === 'post' ||
+          httpMethod === 'put' ||
+          httpMethod === 'patch';
+
+        const requestBodyArgument: string = hasPayload
+          ? 'payload, '
+          : requiresBodyArgument
+            ? 'null, '
+            : '';
+
+        const httpArguments: string = `\`${url}\`, ${requestBodyArgument}${optionsArg}`;
+
+        if (isBinary) {
+          httpCall = `.${httpMethod}(${httpArguments})`;
         } else {
-          if (isBinary) {
-            httpCall = `.${httpMethod}(\`${url}\`, ${optionsArg})`;
-          } else {
-            httpCall = `.${httpMethod}<${returnType}>(\`${url}\`, ${optionsArg})`;
-          }
+          httpCall = `.${httpMethod}<${returnType}>(${httpArguments})`;
         }
       }
 
