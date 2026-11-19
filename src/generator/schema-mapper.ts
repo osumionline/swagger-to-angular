@@ -2,6 +2,42 @@ import formatPropertyName from './property-name.js';
 import type { SwaggerSchema } from './types.js';
 
 /**
+ * Operators used when combining OpenAPI schema types.
+ */
+type CompositionOperator = 'union' | 'intersection';
+
+/**
+ * Formats a schema type used inside a composition.
+ *
+ * Adds parentheses when a nested composition has
+ * different operator precedence from its parent.
+ *
+ * @param schema Schema representing the composition member.
+ * @param parentOperator Operator of the enclosing composition.
+ * @returns Type representation with parentheses when necessary.
+ */
+function formatCompositionMember(
+  schema: SwaggerSchema,
+  parentOperator: CompositionOperator,
+): string {
+  const type: string = mapSwaggerSchemaToTs(schema);
+
+  const isUnion: boolean =
+    schema.nullable === true ||
+    (Array.isArray(schema.enum) && schema.enum.length > 1) ||
+    (Array.isArray(schema.oneOf) && schema.oneOf.length > 0) ||
+    (Array.isArray(schema.anyOf) && schema.anyOf.length > 0);
+
+  const isIntersection: boolean =
+    Array.isArray(schema.allOf) && schema.allOf.length > 0;
+
+  const requiresParentheses: boolean =
+    parentOperator === 'intersection' ? isUnion : isIntersection;
+
+  return requiresParentheses ? `(${type})` : type;
+}
+
+/**
  * Maps an OpenAPI schema to a TypeScript type.
  * Handles nullability after resolving the base type.
  *
@@ -40,7 +76,7 @@ export function mapSwaggerSchemaToTsNonNullable(schema: SwaggerSchema): string {
 
   if (Array.isArray(schema.oneOf) && schema.oneOf.length > 0) {
     const types: string[] = schema.oneOf.map((item: SwaggerSchema): string => {
-      return mapSwaggerSchemaToTs(item);
+      return formatCompositionMember(item, 'union');
     });
 
     return buildUnion(types);
@@ -48,7 +84,7 @@ export function mapSwaggerSchemaToTsNonNullable(schema: SwaggerSchema): string {
 
   if (Array.isArray(schema.anyOf) && schema.anyOf.length > 0) {
     const types: string[] = schema.anyOf.map((item: SwaggerSchema): string => {
-      return mapSwaggerSchemaToTs(item);
+      return formatCompositionMember(item, 'union');
     });
 
     return buildUnion(types);
@@ -56,7 +92,7 @@ export function mapSwaggerSchemaToTsNonNullable(schema: SwaggerSchema): string {
 
   if (Array.isArray(schema.allOf) && schema.allOf.length > 0) {
     const types: string[] = schema.allOf.map((item: SwaggerSchema): string => {
-      return mapSwaggerSchemaToTs(item);
+      return formatCompositionMember(item, 'intersection');
     });
 
     return buildIntersection(types);
@@ -147,6 +183,7 @@ export function mapSwaggerSchemaToTsNonNullable(schema: SwaggerSchema): string {
  */
 export function extractRefName(ref: string): string {
   const last: string = ref.split('/').pop() ?? '';
+
   return last === '' ? 'any' : last;
 }
 
