@@ -1,3 +1,4 @@
+import createParameterName from './parameter-name.js';
 import mergeParameters from './parameters.js';
 import getResponseInfo from './response-info.js';
 import { mapSwaggerSchemaToTs } from './schema-mapper.js';
@@ -41,13 +42,35 @@ function isSupportedHttpMethod(method: string): method is HttpMethod {
 }
 
 /**
+ * Formats an OpenAPI query parameter name as a TypeScript
+ * string literal.
+ *
+ * Simple names retain single quotes for compatibility
+ * with the existing generated output.
+ * Other names are safely escaped using JSON.stringify.
+ *
+ * @param name Original OpenAPI query parameter name.
+ * @returns Escaped TypeScript string literal.
+ */
+function formatQueryParameterKey(name: string): string {
+  const isSimpleName: boolean = /^[A-Za-z0-9_$.-]+$/.test(name);
+
+  return isSimpleName ? `'${name}'` : JSON.stringify(name);
+}
+
+/**
  * Generates Angular service methods from OpenAPI paths
  * and their HTTP operation definitions.
  *
  * Combines path-level and operation-level parameters,
  * allowing operation parameters to override inherited ones.
+ *
  * Required arguments are placed before optional arguments.
  * Response types are resolved from documented success statuses.
+ *
+ * HTTP parameter names are converted into valid, unique
+ * TypeScript identifiers while preserving their original
+ * names in outgoing requests.
  *
  * @param paths Collection of OpenAPI paths and operations.
  * @param basePathName Environment property containing the API base URL.
@@ -113,17 +136,28 @@ export default function generateMethods(
       const requiredArgs: string[] = [];
       const optionalArgs: string[] = [];
 
+      const usedNames: Set<string> = new Set<string>();
+
+      let interpolatedPath: string = rawPath;
+
       for (const param of pathParams) {
         const type: string = mapSwaggerSchemaToTs(param.schema ?? {});
         const isRequired: boolean = param.required !== false;
 
-        const argument: string = `${param.name}${isRequired ? '' : '?'}: ${type}`;
+        const argumentName: string = createParameterName(param, usedNames);
+
+        const argument: string = `${argumentName}${isRequired ? '' : '?'}: ${type}`;
 
         if (isRequired) {
           requiredArgs.push(argument);
         } else {
           optionalArgs.push(argument);
         }
+
+        interpolatedPath = interpolatedPath.replace(
+          `{${param.name}}`,
+          `\${${argumentName}}`,
+        );
       }
 
       const queryParamSets: string[] = [];
@@ -132,7 +166,9 @@ export default function generateMethods(
         const type: string = mapSwaggerSchemaToTs(param.schema ?? {});
         const isRequired: boolean = param.required === true;
 
-        const argument: string = `${param.name}${isRequired ? '' : '?'}: ${type}`;
+        const argumentName: string = createParameterName(param, usedNames);
+
+        const argument: string = `${argumentName}${isRequired ? '' : '?'}: ${type}`;
 
         if (isRequired) {
           requiredArgs.push(argument);
@@ -140,8 +176,10 @@ export default function generateMethods(
           optionalArgs.push(argument);
         }
 
+        const queryKey: string = formatQueryParameterKey(param.name);
+
         queryParamSets.push(
-          `    if (${param.name} !== undefined) {\n      params = params.set('${param.name}', String(${param.name}));\n    }`,
+          `    if (${argumentName} !== undefined) {\n      params = params.set(${queryKey}, String(${argumentName}));\n    }`,
         );
       }
 
@@ -165,15 +203,6 @@ export default function generateMethods(
       }
 
       const argsList: string[] = [...requiredArgs, ...optionalArgs];
-
-      let interpolatedPath: string = rawPath;
-
-      for (const param of pathParams) {
-        interpolatedPath = interpolatedPath.replace(
-          `{${param.name}}`,
-          `\${${param.name}}`,
-        );
-      }
 
       const url: string = `\${this.${basePathName}}${interpolatedPath}`;
 
