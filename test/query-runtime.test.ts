@@ -232,12 +232,11 @@ describe('Generated query runtime serialization', (): void => {
       ],
     );
 
-    expect(request.params.get('colors')).toBe('red green');
-    expect(request.params.get('tags')).toBe('a|b');
+    expect(request.url).toBe(
+      'https://example.com/api/v1/search?' + 'colors=red%20green&tags=a|b',
+    );
 
-    expect(request.params.toString()).toContain('colors=red%20green');
-
-    expect(request.params.toString()).toContain('tags=a%7Cb');
+    expect(request.params.toString()).toBe('');
   });
 
   it('serializes exploded form objects as separate keys', (): void => {

@@ -2,17 +2,20 @@ import type { SwaggerParameter, SwaggerSchema } from './types.js';
 
 /**
  * Generates raw, percent-encoded query fragments for
- * OpenAPI form parameters with explode=false.
+ * OpenAPI form, spaceDelimited and pipeDelimited parameters.
  *
- * Each array element or object key/value is encoded
- * separately before joining with structural commas.
+ * Array values and object keys/values are encoded separately
+ * before joining them with structural delimiters.
+ *
+ * Form objects and arrays are handled when explode=false.
+ * Delimited arrays use the default explode=false behavior.
  *
  * Other serialization modes return null and continue
  * using Angular HttpParams.
  *
  * @param parameter OpenAPI query parameter definition.
  * @param argumentName Generated TypeScript argument name.
- * @param queryKey Escaped TypeScript literal for the original query name.
+ * @param queryKey Escaped TypeScript literal for the query name.
  * @returns Generated statements, or null when not applicable.
  */
 export default function generateEncodedFormQueryCode(
@@ -21,10 +24,6 @@ export default function generateEncodedFormQueryCode(
   queryKey: string,
 ): string | null {
   const style: string = parameter.style ?? 'form';
-
-  if (style !== 'form' || parameter.explode !== false) {
-    return null;
-  }
 
   const schema: SwaggerSchema | undefined = parameter.schema;
 
@@ -39,6 +38,32 @@ export default function generateEncodedFormQueryCode(
   const condition: string = `${argumentName} !== undefined && ${argumentName} !== null`;
 
   const encodedKey: string = `encodeURIComponent(${queryKey})`;
+
+  if (isArray && (style === 'spaceDelimited' || style === 'pipeDelimited')) {
+    if (parameter.explode === true) {
+      throw new Error(
+        `Unsupported ${style} array serialization for ` +
+          `"${parameter.name}": explode=true.`,
+      );
+    }
+
+    const delimiter: string = style === 'spaceDelimited' ? '%20' : '|';
+
+    const delimiterLiteral: string = JSON.stringify(delimiter);
+
+    return (
+      `    if (${condition}) {\n` +
+      `      const encodedValues: string[] = ${argumentName}` +
+      `.map((value): string => encodeURIComponent(String(value)));\n` +
+      `      querySegments.push(${encodedKey} + '=' + ` +
+      `encodedValues.join(${delimiterLiteral}));\n` +
+      `    }`
+    );
+  }
+
+  if (style !== 'form' || parameter.explode !== false) {
+    return null;
+  }
 
   if (isArray) {
     return (

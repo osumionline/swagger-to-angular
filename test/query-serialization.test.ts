@@ -304,8 +304,10 @@ describe('OpenAPI query parameter serialization', (): void => {
     );
 
     expect(content).toContain(
-      `ids.map((value): string => String(value)).join("|")`,
+      'ids.map((value): string => encodeURIComponent(String(value)))',
     );
+
+    expect(content).toContain('encodedValues.join("|")');
 
     expect(content).toContain(
       "headers['X-Request-Id'] = String(OpenApiSchema_X_2d_Request_2d_Id);",
@@ -313,9 +315,7 @@ describe('OpenAPI query parameter serialization', (): void => {
 
     expect(content).toContain("responseType: 'arraybuffer' as const");
 
-    expect(content).toContain(
-      '.get(`${this.basePathApi}/v1/reports`, options)',
-    );
+    expect(content).toContain('.get(finalUrl, options)');
   });
 
   it('serializes form objects with exploded properties by default', (): void => {
