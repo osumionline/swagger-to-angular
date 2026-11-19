@@ -5,6 +5,9 @@ import type { SwaggerParameter, SwaggerPaths, SwaggerSchema } from './types.js';
  * Generates Angular service methods from OpenAPI paths
  * and their HTTP operation definitions.
  *
+ * Required arguments are placed before optional arguments
+ * to produce valid TypeScript method signatures.
+ *
  * @param paths Collection of OpenAPI paths and operations.
  * @param basePathName Environment property containing the API base URL.
  * @returns TypeScript source code for the generated service methods.
@@ -54,21 +57,35 @@ export default function generateMethods(
         },
       );
 
-      const argsList: string[] = [];
+      const requiredArgs: string[] = [];
+      const optionalArgs: string[] = [];
 
       for (const param of pathParams) {
         const type: string = mapSwaggerSchemaToTs(param.schema ?? {});
-        const optional: boolean = param.required === false;
+        const isRequired: boolean = param.required !== false;
 
-        argsList.push(`${param.name}${optional ? '?' : ''}: ${type}`);
+        const argument: string = `${param.name}${isRequired ? '' : '?'}: ${type}`;
+
+        if (isRequired) {
+          requiredArgs.push(argument);
+        } else {
+          optionalArgs.push(argument);
+        }
       }
 
       const queryParamSets: string[] = [];
 
       for (const param of queryParams) {
         const type: string = mapSwaggerSchemaToTs(param.schema ?? {});
+        const isRequired: boolean = param.required === true;
 
-        argsList.push(`${param.name}?: ${type}`);
+        const argument: string = `${param.name}${isRequired ? '' : '?'}: ${type}`;
+
+        if (isRequired) {
+          requiredArgs.push(argument);
+        } else {
+          optionalArgs.push(argument);
+        }
 
         queryParamSets.push(
           `    if (${param.name} !== undefined) {\n      params = params.set('${param.name}', String(${param.name}));\n    }`,
@@ -85,8 +102,16 @@ export default function generateMethods(
       if (bodySchema !== undefined) {
         const bodyType: string = mapSwaggerSchemaToTs(bodySchema);
 
-        argsList.push(`payload${requestBodyRequired ? '' : '?'}: ${bodyType}`);
+        const argument: string = `payload${requestBodyRequired ? '' : '?'}: ${bodyType}`;
+
+        if (requestBodyRequired) {
+          requiredArgs.push(argument);
+        } else {
+          optionalArgs.push(argument);
+        }
       }
+
+      const argsList: string[] = [...requiredArgs, ...optionalArgs];
 
       let interpolatedPath: string = rawPath;
 
