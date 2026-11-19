@@ -59,7 +59,7 @@ interface SwaggerRequestBody {
 /**
  * Definition of an OpenAPI operation.
  */
-interface SwaggerOperation {
+export interface SwaggerOperation {
   operationId?: string;
   parameters?: SwaggerParameter[];
   requestBody?: SwaggerRequestBody;
@@ -70,9 +70,32 @@ interface SwaggerOperation {
 }
 
 /**
- * Collection of paths and HTTP operations.
+ * OpenAPI path item containing HTTP operations
+ * and metadata shared by those operations.
  */
-export type SwaggerPaths = Record<string, Record<string, SwaggerOperation>>;
+export interface SwaggerPathItem {
+  $ref?: string;
+  summary?: string;
+  description?: string;
+  servers?: SwaggerServer[];
+  parameters?: SwaggerParameter[];
+
+  get?: SwaggerOperation;
+  put?: SwaggerOperation;
+  post?: SwaggerOperation;
+  delete?: SwaggerOperation;
+  options?: SwaggerOperation;
+  head?: SwaggerOperation;
+  patch?: SwaggerOperation;
+  trace?: SwaggerOperation;
+
+  [extension: `x-${string}`]: unknown;
+}
+
+/**
+ * Collection of OpenAPI paths.
+ */
+export type SwaggerPaths = Record<string, SwaggerPathItem>;
 
 /**
  * Metadata required to generate an Angular service.

@@ -1,12 +1,50 @@
+import mergeParameters from './parameters.js';
 import { mapSwaggerSchemaToTs } from './schema-mapper.js';
-import type { SwaggerParameter, SwaggerPaths, SwaggerSchema } from './types.js';
+import type {
+  SwaggerOperation,
+  SwaggerParameter,
+  SwaggerPaths,
+  SwaggerSchema,
+} from './types.js';
+
+/**
+ * HTTP methods supported by the Angular service generator.
+ */
+type HttpMethod =
+  | 'get'
+  | 'put'
+  | 'post'
+  | 'delete'
+  | 'options'
+  | 'head'
+  | 'patch';
+
+/**
+ * Checks whether a path item key identifies a supported
+ * HTTP operation rather than OpenAPI metadata.
+ *
+ * @param method Path item property name.
+ * @returns True when the property is a supported HTTP method.
+ */
+function isSupportedHttpMethod(method: string): method is HttpMethod {
+  return (
+    method === 'get' ||
+    method === 'put' ||
+    method === 'post' ||
+    method === 'delete' ||
+    method === 'options' ||
+    method === 'head' ||
+    method === 'patch'
+  );
+}
 
 /**
  * Generates Angular service methods from OpenAPI paths
  * and their HTTP operation definitions.
  *
- * Required arguments are placed before optional arguments
- * to produce valid TypeScript method signatures.
+ * Combines path-level and operation-level parameters,
+ * allowing operation parameters to override inherited ones.
+ * Required arguments are placed before optional arguments.
  *
  * @param paths Collection of OpenAPI paths and operations.
  * @param basePathName Environment property containing the API base URL.
@@ -18,9 +56,25 @@ export default function generateMethods(
 ): string {
   const methods: string[] = [];
 
-  for (const [rawPath, methodsMap] of Object.entries(paths)) {
-    for (const [httpMethodRaw, def] of Object.entries(methodsMap)) {
-      const httpMethod: string = httpMethodRaw.toLowerCase();
+  for (const [rawPath, pathItem] of Object.entries(paths)) {
+    const pathParameters: SwaggerParameter[] = Array.isArray(
+      pathItem.parameters,
+    )
+      ? pathItem.parameters
+      : [];
+
+    for (const httpMethodRaw of Object.keys(pathItem)) {
+      if (!isSupportedHttpMethod(httpMethodRaw)) {
+        continue;
+      }
+
+      const httpMethod: HttpMethod = httpMethodRaw;
+
+      const def: SwaggerOperation | undefined = pathItem[httpMethod];
+
+      if (def === undefined) {
+        continue;
+      }
 
       const operationId: string =
         def.operationId ?? `${httpMethod}_${rawPath.replace(/[/{}/]/g, '_')}`;
@@ -41,9 +95,16 @@ export default function generateMethods(
             responses200Content['application/json']?.schema ?? {},
           );
 
-      const parameters: SwaggerParameter[] = Array.isArray(def.parameters)
+      const operationParameters: SwaggerParameter[] = Array.isArray(
+        def.parameters,
+      )
         ? def.parameters
         : [];
+
+      const parameters: SwaggerParameter[] = mergeParameters(
+        pathParameters,
+        operationParameters,
+      );
 
       const queryParams: SwaggerParameter[] = parameters.filter(
         (param: SwaggerParameter): boolean => {
@@ -149,11 +210,15 @@ export default function generateMethods(
 
       let httpCall: string;
 
-      if (httpMethod === 'get') {
+      if (
+        httpMethod === 'get' ||
+        httpMethod === 'head' ||
+        httpMethod === 'options'
+      ) {
         if (isBinary) {
-          httpCall = `.get(\`${url}\`, ${optionsArg})`;
+          httpCall = `.${httpMethod}(\`${url}\`, ${optionsArg})`;
         } else {
-          httpCall = `.get<${returnType}>(\`${url}\`, ${optionsArg})`;
+          httpCall = `.${httpMethod}<${returnType}>(\`${url}\`, ${optionsArg})`;
         }
       } else if (httpMethod === 'delete') {
         if (hasPayload) {
@@ -175,16 +240,7 @@ export default function generateMethods(
           }
         }
       } else {
-        const requiresBodyArgument: boolean =
-          httpMethod === 'post' ||
-          httpMethod === 'put' ||
-          httpMethod === 'patch';
-
-        const requestBodyArgument: string = hasPayload
-          ? 'payload, '
-          : requiresBodyArgument
-            ? 'null, '
-            : '';
+        const requestBodyArgument: string = hasPayload ? 'payload, ' : 'null, ';
 
         const httpArguments: string = `\`${url}\`, ${requestBodyArgument}${optionsArg}`;
 
