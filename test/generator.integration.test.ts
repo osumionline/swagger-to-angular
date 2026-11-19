@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
-import path from 'node:path';
 import os from 'node:os';
-import { generate } from '../src/generator.js';
+import path from 'node:path';
+import { describe, expect, it } from 'vitest';
+import generate from '../src/generator.js';
 
 describe('generate() integration', () => {
   it('generates a service file from a minimal swagger', () => {
@@ -20,7 +20,9 @@ describe('generate() integration', () => {
             responses: {
               '200': {
                 content: {
-                  'application/json': { schema: { $ref: '#/components/schemas/Foo' } },
+                  'application/json': {
+                    schema: { $ref: '#/components/schemas/Foo' },
+                  },
                 },
               },
             },

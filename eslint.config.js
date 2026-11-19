@@ -1,7 +1,7 @@
 import js from '@eslint/js';
+import path from 'path';
 import tseslint from 'typescript-eslint';
 import { fileURLToPath } from 'url';
-import path from 'path';
 
 const tsconfigRootDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -13,7 +13,7 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.json'],
+        project: ['./tsconfig.eslint.json'],
         tsconfigRootDir,
         ecmaVersion: 'latest',
         sourceType: 'module',
@@ -21,6 +21,7 @@ export default tseslint.config(
     },
     rules: {
       'no-console': 'off',
+      '@typescript-eslint/no-inferrable-types': 'off',
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/consistent-type-imports': [
         'error',
@@ -28,8 +29,12 @@ export default tseslint.config(
       ],
       '@typescript-eslint/no-unused-vars': [
         'error',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
       ],
     },
-  }
+  },
 );

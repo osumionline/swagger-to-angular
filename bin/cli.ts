@@ -3,7 +3,7 @@
 import { program, type OptionValues } from 'commander';
 import fs from 'node:fs';
 import path from 'node:path';
-import { generate } from '../src/generator.js';
+import generate from '../src/generator.js';
 
 program
   .option('-u, --url <url>', 'URL de un Swagger JSON')
@@ -56,7 +56,9 @@ async function main(): Promise<void> {
     if (url) {
       const res = await fetch(url);
       if (!res.ok) {
-        throw new Error(`Error al obtener la URL: ${res.status} ${res.statusText}`);
+        throw new Error(
+          `Error al obtener la URL: ${res.status} ${res.statusText}`,
+        );
       }
       swaggerData = await res.json();
     } else {
@@ -68,12 +70,17 @@ async function main(): Promise<void> {
     }
 
     if (!isRecord(swaggerData)) {
-      throw new Error('Swagger JSON inválido: se esperaba un objeto JSON en la raíz');
+      throw new Error(
+        'Swagger JSON inválido: se esperaba un objeto JSON en la raíz',
+      );
     }
 
     generate(swaggerData, dest);
   } catch (err: unknown) {
-    console.error('❌ Error durante la generación:', err instanceof Error ? err.message : err);
+    console.error(
+      '❌ Error durante la generación:',
+      err instanceof Error ? err.message : err,
+    );
     process.exit(1);
   }
 }

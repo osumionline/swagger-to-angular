@@ -15,7 +15,16 @@ Convierte automáticamente un Swagger JSON en un servicio `.ts` que incluye:
 - Todos los métodos HTTP (`get`, `post`, `put`, `delete`) del apartado `paths`
 - Firma de parámetros y tipos de retorno
 - Gestión de errores HTTP
-- Uso de `inject(HttpClient)` y entorno compatible con Angular 20+
+
+## Compatibilidad
+
+| Versión | Angular  |
+| ------- | -------- |
+| 1.3.0+  | >=22.0.0 |
+| <=1.2.0 | >=20.0.0 |
+
+A partir de la versión 1.3.0, los servicios generados
+utilizan el decorador @Service() de Angular 22.
 
 ---
 

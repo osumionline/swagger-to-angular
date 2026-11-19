@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { __test__ } from '../src/generator.js';
+import * as __test__ from '../src/generator/schema-mapper.js';
+import type { SwaggerSchema } from '../src/generator/types.js';
 
 describe('generator.ts branch/unit coverage', () => {
   it('extractRefName(): returns last segment for normal refs and falls back to "any" when empty', () => {
@@ -43,14 +44,22 @@ describe('generator.ts branch/unit coverage', () => {
     expect(__test__.mapSwaggerSchemaToTs(schema)).toBe('number[]');
   });
 
-  it('mapSwaggerSchemaToTs(): handles object additionalProperties === true', () => {
-    const schema = { type: 'object', additionalProperties: true };
-    expect(__test__.mapSwaggerSchemaToTs(schema)).toBe('{ [key: string]: any }');
+  it('mapSwaggerSchemaToTs(): handles object additionalProperties === true', (): void => {
+    const schema: SwaggerSchema = {
+      type: 'object',
+      additionalProperties: true,
+    };
+
+    expect(__test__.mapSwaggerSchemaToTs(schema)).toBe(
+      '{ [key: string]: any }',
+    );
   });
 
   it('mapSwaggerSchemaToTs(): handles object with no properties and no additionalProperties (fallback any-map)', () => {
     const schema = { type: 'object' };
-    expect(__test__.mapSwaggerSchemaToTs(schema)).toBe('{ [key: string]: any }');
+    expect(__test__.mapSwaggerSchemaToTs(schema)).toBe(
+      '{ [key: string]: any }',
+    );
   });
 
   it('mapSwaggerSchemaToTs(): handles enum with mixed values (string/number/bool/null)', () => {

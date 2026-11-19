@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { generateFromFixture } from './_helpers';
+import { generateFromFixture } from './_helpers.js';
 
 describe('swagger-to-angular fixtures', () => {
   it('minimal: generates service with class, basePath and method', () => {
@@ -16,12 +16,14 @@ describe('swagger-to-angular fixtures', () => {
     expect(content).toContain('HttpParams');
     expect(content).toContain('let params = new HttpParams();');
 
-    expect(content).toContain("if (q !== undefined) {");
+    expect(content).toContain('if (q !== undefined) {');
     expect(content).toContain("params = params.set('q', String(q));");
-    expect(content).toContain("if (page !== undefined) {");
+    expect(content).toContain('if (page !== undefined) {');
     expect(content).toContain("params = params.set('page', String(page));");
-    expect(content).toContain("if (esCierre !== undefined) {");
-    expect(content).toContain("params = params.set('esCierre', String(esCierre));");
+    expect(content).toContain('if (esCierre !== undefined) {');
+    expect(content).toContain(
+      "params = params.set('esCierre', String(esCierre));",
+    );
 
     expect(content).toContain('const options = {');
     expect(content).toContain('params');
@@ -99,9 +101,11 @@ describe('swagger-to-angular fixtures', () => {
 
   it('binary-with-query: binary response + query params merges options', () => {
     const { content } = generateFromFixture('binary-with-query');
-    expect(content).toContain('getReportPdfWithQuery(id?: number): Observable<ArrayBuffer>');
+    expect(content).toContain(
+      'getReportPdfWithQuery(id?: number): Observable<ArrayBuffer>',
+    );
     expect(content).toContain('let params = new HttpParams();');
-    expect(content).toContain("if (id !== undefined) {");
+    expect(content).toContain('if (id !== undefined) {');
     expect(content).toContain("params = params.set('id', String(id));");
     expect(content).toContain("responseType: 'arraybuffer' as const");
     expect(content).toMatchSnapshot();
@@ -109,13 +113,17 @@ describe('swagger-to-angular fixtures', () => {
 
   it('additional-properties-schema: maps to { [key: string]: number }', () => {
     const { content } = generateFromFixture('additional-properties-schema');
-    expect(content).toContain('getMap(): Observable<{ [key: string]: number }>');
+    expect(content).toContain(
+      'getMap(): Observable<{ [key: string]: number }>',
+    );
     expect(content).toMatchSnapshot();
   });
 
   it('object-no-type-properties: treats schema as object literal', () => {
     const { content } = generateFromFixture('object-no-type-properties');
-    expect(content).toContain('getObjNoType(): Observable<{ x?: string; y?: number; }>');
+    expect(content).toContain(
+      'getObjNoType(): Observable<{ x?: string; y?: number; }>',
+    );
     expect(content).toMatchSnapshot();
   });
 

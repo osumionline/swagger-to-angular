@@ -1,9 +1,8 @@
 import fs from 'node:fs';
-import path from 'node:path';
 import os from 'node:os';
-
-import type { SwaggerDoc } from '../src/generator.js';
-import { generate } from '../src/generator.js';
+import path from 'node:path';
+import generate from '../src/generator.js';
+import type { SwaggerDoc } from '../src/generator/types.js';
 
 export type FixtureName =
   | 'minimal'
