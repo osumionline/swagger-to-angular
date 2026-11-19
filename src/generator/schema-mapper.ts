@@ -1,3 +1,4 @@
+import formatPropertyName from './property-name.js';
 import type { SwaggerSchema } from './types.js';
 
 /**
@@ -102,8 +103,9 @@ export function mapSwaggerSchemaToTsNonNullable(schema: SwaggerSchema): string {
       for (const [key, value] of Object.entries(schema.properties)) {
         const type: string = mapSwaggerSchemaToTs(value);
         const isRequired: boolean = requiredList.includes(key);
+        const formattedName: string = formatPropertyName(key);
 
-        fields.push(`${key}${isRequired ? '' : '?'}: ${type};`);
+        fields.push(`${formattedName}${isRequired ? '' : '?'}: ${type};`);
       }
 
       return `{ ${fields.join(' ')} }`;
