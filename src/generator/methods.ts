@@ -1,6 +1,7 @@
 import createOperationName from './operation-name.js';
 import createParameterName from './parameter-name.js';
 import mergeParameters from './parameters.js';
+import generateQueryParameterCode from './query-serializer.js';
 import getResponseInfo from './response-info.js';
 import { mapSwaggerSchemaToTs } from './schema-mapper.js';
 import type {
@@ -84,6 +85,7 @@ function formatHttpParameterKey(name: string): string {
  * names in outgoing requests.
  *
  * Supports path, query and header parameters.
+ * Query arrays use their OpenAPI serialization settings.
  *
  * Operation identifiers are converted into valid and unique
  * service method names.
@@ -216,7 +218,7 @@ export default function generateMethods(
         const queryKey: string = formatHttpParameterKey(param.name);
 
         queryParamSets.push(
-          `    if (${argumentName} !== undefined) {\n      params = params.set(${queryKey}, String(${argumentName}));\n    }`,
+          generateQueryParameterCode(param, argumentName, queryKey),
         );
       }
 

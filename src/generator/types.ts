@@ -39,6 +39,18 @@ export interface SwaggerSchema {
 }
 
 /**
+ * Serialization styles supported by OpenAPI parameters.
+ */
+export type SwaggerParameterStyle =
+  | 'matrix'
+  | 'label'
+  | 'form'
+  | 'simple'
+  | 'spaceDelimited'
+  | 'pipeDelimited'
+  | 'deepObject';
+
+/**
  * Definition of an HTTP operation parameter.
  */
 export interface SwaggerParameter {
@@ -46,6 +58,8 @@ export interface SwaggerParameter {
   in: 'query' | 'path' | 'header' | 'cookie';
   required?: boolean;
   schema?: SwaggerSchema;
+  style?: SwaggerParameterStyle;
+  explode?: boolean;
 }
 
 /**
