@@ -1,0 +1,64 @@
+{
+  "openapi": "3.0.0",
+  "servers": [
+    {
+      "url": "https://example.com/querymulti"
+    }
+  ],
+  "paths": {
+    "/v1/search": {
+      "get": {
+        "operationId": "searchWithMultipleObjects",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "style": "form",
+            "explode": false,
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["role"],
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "active": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "descending": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
