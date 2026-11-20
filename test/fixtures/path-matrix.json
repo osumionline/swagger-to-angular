@@ -1,0 +1,82 @@
+{
+  "openapi": "3.0.0",
+  "servers": [
+    {
+      "url": "https://example.com/pathmatrix"
+    }
+  ],
+  "paths": {
+    "/v1/colors/{color}": {
+      "get": {
+        "operationId": "getColorByMatrix",
+        "parameters": [
+          {
+            "name": "color",
+            "in": "path",
+            "required": true,
+            "style": "matrix",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/colors/{colors}": {
+      "get": {
+        "operationId": "getColorsByMatrix",
+        "parameters": [
+          {
+            "name": "colors",
+            "in": "path",
+            "required": true,
+            "style": "matrix",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "/v1/search/{filter}": {
+      "get": {
+        "operationId": "searchByMatrix",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "path",
+            "required": true,
+            "style": "matrix",
+            "explode": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "active": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

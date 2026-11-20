@@ -1,6 +1,11 @@
 import type { SwaggerParameter, SwaggerSchema } from './types.js';
 
 /**
+ * Supported OpenAPI path serialization styles.
+ */
+type PathStyle = 'simple' | 'label' | 'matrix';
+
+/**
  * Checks whether a schema represents a supported scalar
  * value for OpenAPI path serialization.
  *
@@ -72,8 +77,8 @@ function isObjectSchema(schema: SwaggerSchema | undefined): boolean {
 }
 
 /**
- * Builds the TypeScript expression for a simple or label
- * style object path parameter.
+ * Builds the TypeScript expression for a simple, label or
+ * matrix style object path parameter.
  *
  * Object values must be explicitly scalar. Unknown
  * additionalProperties are rejected.
@@ -81,6 +86,9 @@ function isObjectSchema(schema: SwaggerSchema | undefined): boolean {
  * For exploded label objects, dots inside individual
  * keys and values are encoded to distinguish them
  * from structural dot separators.
+ *
+ * For matrix objects, empty collections use the
+ * semicolon-prefixed parameter name without an equals sign.
  *
  * @param parameter OpenAPI path parameter definition.
  * @param argumentName Generated TypeScript argument name.
@@ -90,7 +98,7 @@ function isObjectSchema(schema: SwaggerSchema | undefined): boolean {
 function generateObjectExpression(
   parameter: SwaggerParameter,
   argumentName: string,
-  style: 'simple' | 'label',
+  style: PathStyle,
 ): string {
   const schema: SwaggerSchema = parameter.schema ?? {};
 
@@ -126,6 +134,37 @@ function generateObjectExpression(
   const entries: string =
     `Object.entries(${argumentName})` +
     `.filter(([, value]): boolean => value !== undefined && value !== null)`;
+
+  if (style === 'matrix') {
+    const encodedName: string = `encodeURIComponent(${JSON.stringify(parameter.name)})`;
+
+    if (parameter.explode === true) {
+      const encodedEntries: string =
+        `${entries}` +
+        `.map(([key, value]): string => ` +
+        `encodeURIComponent(key) + '=' + ` +
+        `encodeURIComponent(String(value)))`;
+
+      return (
+        `((parts: string[]): string => parts.length === 0 ` +
+        `? ';' + ${encodedName} : ';' + parts.join(';'))` +
+        `(${encodedEntries})`
+      );
+    }
+
+    const encodedEntries: string =
+      `${entries}` +
+      `.flatMap(([key, value]): string[] => [` +
+      `encodeURIComponent(key), ` +
+      `encodeURIComponent(String(value))])`;
+
+    return (
+      `((parts: string[]): string => parts.length === 0 ` +
+      `? ';' + ${encodedName} : ` +
+      `';' + ${encodedName} + '=' + parts.join(','))` +
+      `(${encodedEntries})`
+    );
+  }
 
   if (style === 'label') {
     if (parameter.explode === true) {
@@ -170,14 +209,13 @@ function generateObjectExpression(
  * Generates the TypeScript expression used to serialize
  * an OpenAPI path parameter.
  *
- * Supports the simple and label styles, including
- * scalar values, arrays of scalars and flat objects
- * containing scalar values.
+ * Supports simple, label and matrix styles, including
+ * scalar values, arrays of scalars and flat objects.
  *
  * Array elements and object keys/values are encoded
  * individually, leaving structural delimiters intact.
  *
- * Matrix and other unsupported styles are rejected.
+ * Unsupported parameter schemas are rejected.
  *
  * @param parameter OpenAPI path parameter definition.
  * @param argumentName Generated TypeScript argument name.
@@ -193,7 +231,7 @@ export default function generatePathParameterExpression(
 
   const style: string = parameter.style ?? 'simple';
 
-  if (style !== 'simple' && style !== 'label') {
+  if (style !== 'simple' && style !== 'label' && style !== 'matrix') {
     throw new Error(
       `Unsupported path parameter style for "${parameter.name}": ${style}`,
     );
@@ -210,6 +248,26 @@ export default function generatePathParameterExpression(
   if (schema?.type === 'array') {
     if (!isScalarSchema(schema.items, true)) {
       throw new Error(`Unsupported path array item schema: ${parameter.name}`);
+    }
+
+    if (style === 'matrix') {
+      const encodedName: string = `encodeURIComponent(${JSON.stringify(parameter.name)})`;
+
+      if (parameter.explode === true) {
+        return (
+          `(${argumentName}.length === 0 ? ';' + ${encodedName} : ` +
+          `${argumentName}.map((value): string => ';' + ` +
+          `${encodedName} + '=' + encodeURIComponent(String(value)))` +
+          `.join(''))`
+        );
+      }
+
+      return (
+        `(${argumentName}.length === 0 ? ';' + ${encodedName} : ` +
+        `';' + ${encodedName} + '=' + ` +
+        `${argumentName}.map((value): string => ` +
+        `encodeURIComponent(String(value))).join(','))`
+      );
     }
 
     const encodeValue: string =
@@ -237,6 +295,16 @@ export default function generatePathParameterExpression(
   }
 
   const scalarExpression: string = `encodeURIComponent(String(${argumentName}))`;
+
+  if (style === 'matrix') {
+    const encodedName: string = `encodeURIComponent(${JSON.stringify(parameter.name)})`;
+
+    return (
+      `(String(${argumentName}).length === 0 ` +
+      `? ';' + ${encodedName} ` +
+      `: ';' + ${encodedName} + '=' + ${scalarExpression})`
+    );
+  }
 
   return style === 'label' ? `'.' + ${scalarExpression}` : scalarExpression;
 }

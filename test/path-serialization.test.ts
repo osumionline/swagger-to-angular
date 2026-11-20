@@ -309,11 +309,11 @@ describe('OpenAPI path parameter serialization', (): void => {
     expect(request.params.get('page')).toBe('2');
   });
 
-  it('rejects unsupported matrix style', (): void => {
+  it('rejects query-only form style on path parameters', (): void => {
     const parameter: SwaggerParameter = {
       name: 'id',
       in: 'path',
-      style: 'matrix',
+      style: 'form',
       schema: { type: 'string' },
     };
 
