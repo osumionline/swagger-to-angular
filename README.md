@@ -135,6 +135,26 @@ Si cambias el generador y el cambio es intencional, ejecuta npm run test:update 
 
 ⸻
 
+## Cookies en el navegador
+
+Cuando una operación OpenAPI declara parámetros `in: cookie`,
+el generador utiliza `withCredentials: true` en su petición Angular.
+
+Las cookies son gestionadas por el navegador. No se incluyen
+como argumentos individuales en los métodos generados y
+no se establece manualmente la cabecera `Cookie`.
+
+Las cookies deben existir previamente para el origen de la API.
+Su envío depende de las políticas del navegador, SameSite
+y la configuración CORS cuando corresponda.
+
+Este comportamiento no garantiza que una cookie concreta exista
+ni implementa su serialización individual. En entornos SSR,
+`withCredentials` tampoco reenvía automáticamente las cookies
+recibidas en la petición entrante.
+
+⸻
+
 📜 Licencia
 
 MIT

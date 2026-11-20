@@ -154,6 +154,12 @@ export default function generateMethods(
         operationParameters,
       );
 
+      const hasCookieParameters: boolean = parameters.some(
+        (param: SwaggerParameter): boolean => {
+          return param.in === 'cookie';
+        },
+      );
+
       const queryParams: SwaggerParameter[] = parameters.filter(
         (param: SwaggerParameter): boolean => {
           return param.in === 'query';
@@ -332,6 +338,10 @@ export default function generateMethods(
         optionsParts.push("responseType: 'arraybuffer' as const");
       }
 
+      if (hasCookieParameters) {
+        optionsParts.push('withCredentials: true');
+      }
+
       const optionsDecl: string =
         optionsParts.length > 0
           ? `    const options = {\n` +
@@ -391,10 +401,16 @@ export default function generateMethods(
         }
       }
 
+      const cookieDocumentation: string = hasCookieParameters
+        ? `   * Cookie parameters are managed by the browser.\n` +
+          `   * withCredentials enables eligible stored cookies.\n` +
+          `   * Individual cookie values cannot be passed as arguments.\n`
+        : '';
+
       const method: string = `
   /**
    * Auto-generated method for operationId: ${operationIdComment}
-   */
+${cookieDocumentation}   */
   ${methodName}(${argsList.join(', ')}): Observable<${returnType}> {
 ${querySegmentsPrelude}${paramsPrelude}${headersPrelude}${requestUrlPrelude}${optionsDecl}    return this.http
       ${httpCall}
