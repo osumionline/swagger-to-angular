@@ -106,7 +106,7 @@ describe('OpenAPI header parameters', (): void => {
       'getItem(id: number, id_header: string, id_query?: string)',
     );
 
-    expect(content).toContain('/v1/items/${id}');
+    expect(content).toContain('/v1/items/${encodeURIComponent(String(id))}');
 
     expect(content).toContain("params = params.set('id', String(id_query));");
 

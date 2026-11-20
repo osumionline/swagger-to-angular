@@ -159,7 +159,7 @@ describe('generateMethods parameter signatures', (): void => {
     );
 
     expect(content).toContain(
-      '.put<boolean>(`${this.basePathApi}/v1/users/${id}`, payload, options)',
+      '.put<boolean>(`${this.basePathApi}/v1/users/${encodeURIComponent(String(id))}`, payload, options)',
     );
   });
 
@@ -296,7 +296,7 @@ describe('generateMethods parameter signatures', (): void => {
       'saveItem(id: number, version: number, payload: string, label?: string): Observable<boolean>',
     );
 
-    expect(content).toContain('/v1/items/${id}');
+    expect(content).toContain('/v1/items/${encodeURIComponent(String(id))}');
 
     expect(content).toContain(
       "params = params.set('version', String(version));",

@@ -108,7 +108,7 @@ describe('OpenAPI HTTP parameter names', (): void => {
     );
 
     expect(content).toContain(
-      '.get<string>(`${this.basePathApi}/v1/users/${OpenApiSchema_user_2d_id}`, {})',
+      '.get<string>(`${this.basePathApi}/v1/users/${encodeURIComponent(String(OpenApiSchema_user_2d_id))}`, {})',
     );
 
     expect(content).not.toContain('getUser(user-id:');
@@ -187,7 +187,7 @@ describe('OpenAPI HTTP parameter names', (): void => {
       'getItem(id: number, id_query?: string): Observable<any>',
     );
 
-    expect(content).toContain('/v1/items/${id}');
+    expect(content).toContain('/v1/items/${encodeURIComponent(String(id))}');
 
     expect(content).toContain("params = params.set('id', String(id_query));");
   });

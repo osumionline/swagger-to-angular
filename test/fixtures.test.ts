@@ -33,7 +33,7 @@ describe('swagger-to-angular fixtures', () => {
   it('path-params: required path param is not optional in method signature', () => {
     const { content } = generateFromFixture('path-params');
     expect(content).toContain('getUser(id: number)');
-    expect(content).toContain('/v1/users/${id}');
+    expect(content).toContain('/v1/users/${encodeURIComponent(String(id))}');
     expect(content).toMatchSnapshot();
   });
 
@@ -70,7 +70,7 @@ describe('swagger-to-angular fixtures', () => {
     expect(content).toContain('reason: string;');
     expect(content).toContain('force?: boolean;');
     expect(content).toContain('.delete<boolean>(');
-    expect(content).toContain('/v1/items/${id}');
+    expect(content).toContain('/v1/items/${encodeURIComponent(String(id))}');
     expect(content).toContain('{ body: payload');
     expect(content).toMatchSnapshot();
   });
@@ -87,7 +87,7 @@ describe('swagger-to-angular fixtures', () => {
     const { content } = generateFromFixture('delete-no-body');
     expect(content).toContain('deleteItemNoBody(id: number)');
     expect(content).toContain('.delete<boolean>(');
-    expect(content).toContain('/v1/items/${id}');
+    expect(content).toContain('/v1/items/${encodeURIComponent(String(id))}');
     expect(content).toMatchSnapshot();
   });
 

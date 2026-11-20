@@ -3,6 +3,7 @@ import generateEncodedFormQueryCode from './form-query-serializer.js';
 import createOperationName from './operation-name.js';
 import createParameterName from './parameter-name.js';
 import mergeParameters from './parameters.js';
+import generatePathParameterExpression from './path-serializer.js';
 import generateQueryParameterCode from './query-serializer.js';
 import getResponseInfo from './response-info.js';
 import { mapSwaggerSchemaToTs } from './schema-mapper.js';
@@ -194,9 +195,14 @@ export default function generateMethods(
           optionalArgs.push(argument);
         }
 
-        interpolatedPath = interpolatedPath.replace(
+        const pathExpression: string = generatePathParameterExpression(
+          param,
+          argumentName,
+        );
+
+        interpolatedPath = interpolatedPath.replaceAll(
           `{${param.name}}`,
-          `\${${argumentName}}`,
+          `\${${pathExpression}}`,
         );
       }
 

@@ -264,7 +264,7 @@ describe('getResponseInfo', (): void => {
     expect(content).toContain('deleteUser(id: number): Observable<void>');
 
     expect(content).toContain(
-      '.delete<void>(`${this.basePathApi}/v1/users/${id}`, {})',
+      '.delete<void>(`${this.basePathApi}/v1/users/${encodeURIComponent(String(id))}`, {})',
     );
   });
 

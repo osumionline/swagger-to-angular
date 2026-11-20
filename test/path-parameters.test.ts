@@ -32,11 +32,11 @@ describe('OpenAPI path-level parameters', (): void => {
     expect(content).toContain('deleteUser(id: number): Observable<any>');
 
     expect(content).toContain(
-      '.get<any>(`${this.basePathApi}/v1/users/${id}`, {})',
+      '.get<any>(`${this.basePathApi}/v1/users/${encodeURIComponent(String(id))}`, {})',
     );
 
     expect(content).toContain(
-      '.delete<any>(`${this.basePathApi}/v1/users/${id}`, {})',
+      '.delete<any>(`${this.basePathApi}/v1/users/${encodeURIComponent(String(id))}`, {})',
     );
 
     expect(content).not.toContain('parameters(');
@@ -108,7 +108,7 @@ describe('OpenAPI path-level parameters', (): void => {
 
     expect(content).not.toContain('id: number');
 
-    expect(content).toContain('/v1/users/${id}');
+    expect(content).toContain('/v1/users/${encodeURIComponent(String(id))}');
   });
 
   it('does not duplicate overridden query parameters', (): void => {

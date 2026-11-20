@@ -285,7 +285,7 @@ export class DelnobodyService {
    */
   deleteItemNoBody(id: number): Observable<boolean> {
     return this.http
-      .delete<boolean>(\`\${this.basePathDelnobody}/v1/items/\${id}\`, {})
+      .delete<boolean>(\`\${this.basePathDelnobody}/v1/items/\${encodeURIComponent(String(id))}\`, {})
       .pipe(catchError(this.handleError));
   }
 
@@ -332,7 +332,7 @@ export class DelbodyService {
    */
   deleteItem(id: number, payload: { reason: string; force?: boolean; }): Observable<boolean> {
     return this.http
-      .delete<boolean>(\`\${this.basePathDelbody}/v1/items/\${id}\`, { body: payload })
+      .delete<boolean>(\`\${this.basePathDelbody}/v1/items/\${encodeURIComponent(String(id))}\`, { body: payload })
       .pipe(catchError(this.handleError));
   }
 
@@ -657,7 +657,7 @@ export class PathService {
    */
   getUser(id: number): Observable<string> {
     return this.http
-      .get<string>(\`\${this.basePathPath}/v1/users/\${id}\`, {})
+      .get<string>(\`\${this.basePathPath}/v1/users/\${encodeURIComponent(String(id))}\`, {})
       .pipe(catchError(this.handleError));
   }
 

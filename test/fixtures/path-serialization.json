@@ -1,0 +1,79 @@
+{
+  "openapi": "3.0.0",
+  "servers": [
+    {
+      "url": "https://example.com/pathserial"
+    }
+  ],
+  "paths": {
+    "/v1/items/{id}": {
+      "get": {
+        "operationId": "getItemByPath",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tags/{tags}": {
+      "get": {
+        "operationId": "getItemsByTags",
+        "parameters": [
+          {
+            "name": "tags",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "/v1/search/{filter}": {
+      "get": {
+        "operationId": "getItemsByFilter",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "active": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
