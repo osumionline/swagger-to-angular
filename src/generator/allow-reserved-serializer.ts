@@ -1,17 +1,84 @@
 import type { SwaggerParameter, SwaggerSchema } from './types.js';
 
 /**
- * Generates raw URL query serialization for scalar
- * OpenAPI parameters with allowReserved=true.
+ * Checks whether an array item schema represents a
+ * supported scalar value.
  *
- * Preserves query-safe reserved characters while
- * encoding characters that could alter query parsing.
+ * References, objects, arrays and schema compositions
+ * are excluded until their serialization is supported.
  *
- * Valid percent-encoded triples are preserved.
+ * @param schema OpenAPI array item schema.
+ * @returns True when the schema describes a scalar value.
+ */
+function isSupportedScalarItem(schema: SwaggerSchema | undefined): boolean {
+  if (schema === undefined) {
+    return false;
+  }
+
+  const isScalarType: boolean =
+    schema.type === 'string' ||
+    schema.type === 'integer' ||
+    schema.type === 'number' ||
+    schema.type === 'boolean';
+
+  return (
+    isScalarType &&
+    schema.$ref === undefined &&
+    schema.items === undefined &&
+    schema.properties === undefined &&
+    schema.additionalProperties === undefined &&
+    schema.oneOf === undefined &&
+    schema.anyOf === undefined &&
+    schema.allOf === undefined
+  );
+}
+
+/**
+ * Builds a TypeScript expression that serializes a value
+ * using the supported allowReserved behavior.
  *
- * Non-scalar schemas and unsupported styles are rejected
- * rather than silently ignoring allowReserved.
+ * Preserves safe reserved characters and valid percent
+ * triples while escaping characters that could alter
+ * query parsing.
  *
+ * Commas can also be escaped when they occur inside
+ * elements of a non-exploded form array.
+ *
+ * @param valueExpression TypeScript expression containing the value.
+ * @param escapeComma Whether commas inside the value must be escaped.
+ * @returns Generated TypeScript encoding expression.
+ */
+function createReservedValueExpression(
+  valueExpression: string,
+  escapeComma: boolean,
+): string {
+  const parts: string[] = [
+    `encodeURI(String(${valueExpression}))`,
+    ".replace(/&/g, '%26')",
+    ".replace(/\\+/g, '%2B')",
+    ".replace(/#/g, '%23')",
+  ];
+
+  if (escapeComma) {
+    parts.push(".replace(/,/g, '%2C')");
+  }
+
+  parts.push(".replace(/%25([0-9A-Fa-f]{2})/g, '%$1')");
+
+  return parts.join('\n            ');
+}
+
+/**
+ * Generates raw URL query serialization for OpenAPI
+ * parameters with allowReserved=true.
+ *
+ * Supports scalar values and form arrays of scalar values.
+ *
+ * Form arrays with explode=true generate repeated query
+ * names. Arrays with explode=false use structural commas
+ * while escaping commas inside individual values.
+ *
+ * Objects and unsupported styles are rejected.
  * Parameters without allowReserved=true return null.
  *
  * @param parameter OpenAPI parameter definition.
@@ -43,6 +110,44 @@ export default function generateAllowReservedQueryCode(
 
   const schema: SwaggerSchema | undefined = parameter.schema;
 
+  const condition: string = `${argumentName} !== undefined && ${argumentName} !== null`;
+
+  if (schema?.type === 'array') {
+    if (!isSupportedScalarItem(schema.items)) {
+      throw new Error(
+        `allowReserved arrays require scalar item schemas: ${parameter.name}`,
+      );
+    }
+
+    const explode: boolean = parameter.explode !== false;
+
+    const encodedItem: string = createReservedValueExpression('item', !explode);
+
+    if (explode) {
+      return (
+        `    if (${condition}) {\n` +
+        `      ${argumentName}.forEach((item): void => {\n` +
+        `        querySegments.push(\n` +
+        `          encodeURIComponent(${queryKey}) + '=' +\n` +
+        `          ${encodedItem},\n` +
+        `        );\n` +
+        `      });\n` +
+        `    }`
+      );
+    }
+
+    return (
+      `    if (${condition}) {\n` +
+      `      querySegments.push(\n` +
+      `        encodeURIComponent(${queryKey}) + '=' +\n` +
+      `        ${argumentName}\n` +
+      `          .map((item): string => ${encodedItem})\n` +
+      `          .join(','),\n` +
+      `      );\n` +
+      `    }`
+    );
+  }
+
   const isScalarType: boolean =
     schema?.type === undefined ||
     schema.type === 'string' ||
@@ -61,19 +166,21 @@ export default function generateAllowReservedQueryCode(
 
   if (!isScalarType || hasComplexShape) {
     throw new Error(
-      `allowReserved is only supported for scalar query parameters: ${parameter.name}`,
+      `allowReserved is only supported for scalar query parameters ` +
+        `and arrays of scalars: ${parameter.name}`,
     );
   }
 
+  const encodedValue: string = createReservedValueExpression(
+    argumentName,
+    false,
+  );
+
   return (
-    `    if (${argumentName} !== undefined && ${argumentName} !== null) {\n` +
+    `    if (${condition}) {\n` +
     `      querySegments.push(\n` +
     `        encodeURIComponent(${queryKey}) + '=' +\n` +
-    `        encodeURI(String(${argumentName}))\n` +
-    `          .replace(/&/g, '%26')\n` +
-    `          .replace(/\\+/g, '%2B')\n` +
-    `          .replace(/#/g, '%23')\n` +
-    `          .replace(/%25([0-9A-Fa-f]{2})/g, '%$1'),\n` +
+    `        ${encodedValue},\n` +
     `      );\n` +
     `    }`
   );

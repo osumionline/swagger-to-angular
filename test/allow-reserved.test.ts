@@ -305,7 +305,7 @@ describe('OpenAPI allowReserved query serialization', (): void => {
     expect(request.params.toString()).toBe('');
   });
 
-  it('rejects allowReserved on array schemas', (): void => {
+  it('supports allowReserved on scalar array schemas', (): void => {
     const parameter: SwaggerParameter = {
       name: 'tags',
       in: 'query',
@@ -316,9 +316,17 @@ describe('OpenAPI allowReserved query serialization', (): void => {
       },
     };
 
-    expect((): string | null => {
-      return generateAllowReservedQueryCode(parameter, 'tags', "'tags'");
-    }).toThrow(/only supported for scalar query parameters/);
+    const content: string | null = generateAllowReservedQueryCode(
+      parameter,
+      'tags',
+      "'tags'",
+    );
+
+    expect(content).toContain('tags.forEach((item): void => {');
+
+    expect(content).toContain('encodeURI(String(item))');
+
+    expect(content).toContain("encodeURIComponent('tags')");
   });
 
   it('rejects allowReserved on object schemas', (): void => {
