@@ -72,19 +72,25 @@ function isObjectSchema(schema: SwaggerSchema | undefined): boolean {
 }
 
 /**
- * Builds the TypeScript expression for a simple-style
- * object path parameter.
+ * Builds the TypeScript expression for a simple or label
+ * style object path parameter.
  *
  * Object values must be explicitly scalar. Unknown
  * additionalProperties are rejected.
  *
+ * For exploded label objects, dots inside individual
+ * keys and values are encoded to distinguish them
+ * from structural dot separators.
+ *
  * @param parameter OpenAPI path parameter definition.
  * @param argumentName Generated TypeScript argument name.
+ * @param style Supported OpenAPI path serialization style.
  * @returns TypeScript expression for the serialized object.
  */
 function generateObjectExpression(
   parameter: SwaggerParameter,
   argumentName: string,
+  style: 'simple' | 'label',
 ): string {
   const schema: SwaggerSchema = parameter.schema ?? {};
 
@@ -121,6 +127,26 @@ function generateObjectExpression(
     `Object.entries(${argumentName})` +
     `.filter(([, value]): boolean => value !== undefined && value !== null)`;
 
+  if (style === 'label') {
+    if (parameter.explode === true) {
+      return (
+        `'.' + ${entries}` +
+        `.map(([key, value]): string => ` +
+        `encodeURIComponent(key).replace(/\\./g, '%2E') + '=' + ` +
+        `encodeURIComponent(String(value)).replace(/\\./g, '%2E'))` +
+        `.join('.')`
+      );
+    }
+
+    return (
+      `'.' + ${entries}` +
+      `.flatMap(([key, value]): string[] => [` +
+      `encodeURIComponent(key), ` +
+      `encodeURIComponent(String(value))])` +
+      `.join(',')`
+    );
+  }
+
   if (parameter.explode === true) {
     return (
       `${entries}` +
@@ -142,16 +168,16 @@ function generateObjectExpression(
 
 /**
  * Generates the TypeScript expression used to serialize
- * an OpenAPI path parameter with simple style.
+ * an OpenAPI path parameter.
  *
- * Supports scalar values, arrays of scalars and flat
- * objects containing scalar values.
+ * Supports the simple and label styles, including
+ * scalar values, arrays of scalars and flat objects
+ * containing scalar values.
  *
  * Array elements and object keys/values are encoded
  * individually, leaving structural delimiters intact.
  *
- * Explicitly unsupported styles and schemas are rejected
- * rather than interpolated incorrectly.
+ * Matrix and other unsupported styles are rejected.
  *
  * @param parameter OpenAPI path parameter definition.
  * @param argumentName Generated TypeScript argument name.
@@ -167,7 +193,7 @@ export default function generatePathParameterExpression(
 
   const style: string = parameter.style ?? 'simple';
 
-  if (style !== 'simple') {
+  if (style !== 'simple' && style !== 'label') {
     throw new Error(
       `Unsupported path parameter style for "${parameter.name}": ${style}`,
     );
@@ -186,21 +212,31 @@ export default function generatePathParameterExpression(
       throw new Error(`Unsupported path array item schema: ${parameter.name}`);
     }
 
-    return (
+    const encodeValue: string =
+      style === 'label' && parameter.explode === true
+        ? "encodeURIComponent(String(value)).replace(/\\./g, '%2E')"
+        : 'encodeURIComponent(String(value))';
+
+    const separator: string =
+      style === 'label' && parameter.explode === true ? '.' : ',';
+
+    const expression: string =
       `${argumentName}` +
-      `.map((value): string => ` +
-      `encodeURIComponent(String(value)))` +
-      `.join(',')`
-    );
+      `.map((value): string => ${encodeValue})` +
+      `.join('${separator}')`;
+
+    return style === 'label' ? `'.' + ${expression}` : expression;
   }
 
   if (isObjectSchema(schema)) {
-    return generateObjectExpression(parameter, argumentName);
+    return generateObjectExpression(parameter, argumentName, style);
   }
 
   if (!isScalarSchema(schema, false)) {
     throw new Error(`Unsupported path parameter schema: ${parameter.name}`);
   }
 
-  return `encodeURIComponent(String(${argumentName}))`;
+  const scalarExpression: string = `encodeURIComponent(String(${argumentName}))`;
+
+  return style === 'label' ? `'.' + ${scalarExpression}` : scalarExpression;
 }

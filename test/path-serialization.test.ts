@@ -309,19 +309,17 @@ describe('OpenAPI path parameter serialization', (): void => {
     expect(request.params.get('page')).toBe('2');
   });
 
-  it('rejects unsupported label and matrix styles', (): void => {
-    for (const style of ['label', 'matrix'] as const) {
-      const parameter: SwaggerParameter = {
-        name: 'id',
-        in: 'path',
-        style,
-        schema: { type: 'string' },
-      };
+  it('rejects unsupported matrix style', (): void => {
+    const parameter: SwaggerParameter = {
+      name: 'id',
+      in: 'path',
+      style: 'matrix',
+      schema: { type: 'string' },
+    };
 
-      expect((): string => {
-        return generatePathParameterExpression(parameter, 'id');
-      }).toThrow(/Unsupported path parameter style/);
-    }
+    expect((): string => {
+      return generatePathParameterExpression(parameter, 'id');
+    }).toThrow(/Unsupported path parameter style/);
   });
 
   it('rejects arrays containing objects', (): void => {

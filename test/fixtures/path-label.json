@@ -1,0 +1,71 @@
+{
+  "openapi": "3.0.0",
+  "servers": [
+    {
+      "url": "https://example.com/pathlabel"
+    }
+  ],
+  "paths": {
+    "/v1/colors/{color}": {
+      "get": {
+        "operationId": "getColorByLabel",
+        "parameters": [
+          {
+            "name": "color",
+            "in": "path",
+            "required": true,
+            "style": "label",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/colors/{colors}": {
+      "get": {
+        "operationId": "getColorsByLabel",
+        "parameters": [
+          {
+            "name": "colors",
+            "in": "path",
+            "required": true,
+            "style": "label",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "/v1/search/{filter}": {
+      "get": {
+        "operationId": "searchByLabel",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "path",
+            "required": true,
+            "style": "label",
+            "explode": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "active": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
