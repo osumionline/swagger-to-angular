@@ -1,0 +1,64 @@
+{
+  "openapi": "3.0.0",
+  "servers": [
+    {
+      "url": "https://example.com/headerserialization"
+    }
+  ],
+  "paths": {
+    "/v1/items": {
+      "get": {
+        "operationId": "searchItemsWithHeaders",
+        "parameters": [
+          {
+            "name": "X-Ids",
+            "in": "header",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "name": "X-Filter",
+            "in": "header",
+            "style": "simple",
+            "explode": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "active": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

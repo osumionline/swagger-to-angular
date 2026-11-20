@@ -1,5 +1,6 @@
 import generateAllowReservedQueryCode from './allow-reserved-serializer.js';
 import generateEncodedFormQueryCode from './form-query-serializer.js';
+import generateHeaderParameterCode from './header-serializer.js';
 import createOperationName from './operation-name.js';
 import createParameterName from './parameter-name.js';
 import mergeParameters from './parameters.js';
@@ -264,9 +265,7 @@ export default function generateMethods(
         const headerKey: string = formatHttpParameterKey(param.name);
 
         headerParamSets.push(
-          `    if (${argumentName} !== undefined) {\n` +
-            `      headers[${headerKey}] = String(${argumentName});\n` +
-            `    }`,
+          generateHeaderParameterCode(param, argumentName, headerKey),
         );
       }
 
