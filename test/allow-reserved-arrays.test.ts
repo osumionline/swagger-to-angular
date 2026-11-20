@@ -389,6 +389,6 @@ describe('OpenAPI allowReserved array serialization', (): void => {
 
     expect((): string => {
       return generateMethods(paths, 'basePathApi');
-    }).toThrow(/allowReserved arrays require scalar item schemas/);
+    }).toThrow(/Unresolved parameter schema reference/);
   });
 });

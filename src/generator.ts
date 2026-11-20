@@ -28,6 +28,7 @@ export default function generate(
   const methods: string = generateMethods(
     swagger.paths ?? {},
     serviceInfo.basePathName,
+    swagger.components?.schemas ?? {},
   );
 
   const fullContent: string = buildFullFile(serviceInfo, interfaces, methods);

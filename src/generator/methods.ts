@@ -3,6 +3,7 @@ import generateEncodedFormQueryCode from './form-query-serializer.js';
 import generateHeaderParameterCode from './header-serializer.js';
 import createOperationName from './operation-name.js';
 import createParameterName from './parameter-name.js';
+import resolveParameterSchema from './parameter-schema-resolver.js';
 import mergeParameters from './parameters.js';
 import generatePathParameterExpression from './path-serializer.js';
 import generateQueryParameterCode from './query-serializer.js';
@@ -95,11 +96,13 @@ function formatHttpParameterKey(name: string): string {
  *
  * @param paths Collection of OpenAPI paths and operations.
  * @param basePathName Environment property containing the API base URL.
+ * @param schemas Named component schemas for parameter reference resolution.
  * @returns TypeScript source code for the generated service methods.
  */
 export default function generateMethods(
   paths: SwaggerPaths,
   basePathName: string,
+  schemas: Record<string, SwaggerSchema> = {},
 ): string {
   const methods: string[] = [];
   const usedMethodNames: Set<string> = new Set<string>();
@@ -202,8 +205,13 @@ export default function generateMethods(
           optionalArgs.push(argument);
         }
 
-        const pathExpression: string = generatePathParameterExpression(
+        const serializationParameter: SwaggerParameter = resolveParameterSchema(
           param,
+          schemas,
+        );
+
+        const pathExpression: string = generatePathParameterExpression(
+          serializationParameter,
           argumentName,
         );
 
@@ -232,22 +240,35 @@ export default function generateMethods(
 
         const queryKey: string = formatHttpParameterKey(param.name);
 
-        const reservedCode: string | null = generateAllowReservedQueryCode(
+        const serializationParameter: SwaggerParameter = resolveParameterSchema(
           param,
+          schemas,
+        );
+
+        const reservedCode: string | null = generateAllowReservedQueryCode(
+          serializationParameter,
           argumentName,
           queryKey,
         );
 
         const encodedCode: string | null =
           reservedCode ??
-          generateEncodedFormQueryCode(param, argumentName, queryKey);
+          generateEncodedFormQueryCode(
+            serializationParameter,
+            argumentName,
+            queryKey,
+          );
 
         if (encodedCode !== null) {
           hasEncodedFormQuery = true;
           queryParamSets.push(encodedCode);
         } else {
           queryParamSets.push(
-            generateQueryParameterCode(param, argumentName, queryKey),
+            generateQueryParameterCode(
+              serializationParameter,
+              argumentName,
+              queryKey,
+            ),
           );
         }
       }
@@ -270,8 +291,17 @@ export default function generateMethods(
 
         const headerKey: string = formatHttpParameterKey(param.name);
 
+        const serializationParameter: SwaggerParameter = resolveParameterSchema(
+          param,
+          schemas,
+        );
+
         headerParamSets.push(
-          generateHeaderParameterCode(param, argumentName, headerKey),
+          generateHeaderParameterCode(
+            serializationParameter,
+            argumentName,
+            headerKey,
+          ),
         );
       }
 
