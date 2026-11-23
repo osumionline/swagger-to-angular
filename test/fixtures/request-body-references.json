@@ -1,0 +1,151 @@
+{
+  "openapi": "3.0.3",
+  "servers": [
+    {
+      "url": "https://example.com/requestbodyreferences"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "UserInput": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": { "type": "string" },
+          "name": { "type": "string" }
+        }
+      },
+      "UserUpdate": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" }
+        }
+      }
+    },
+    "requestBodies": {
+      "CreateUser": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UserInput"
+            }
+          }
+        }
+      },
+      "CreateUserAlias": {
+        "$ref": "#/components/requestBodies/CreateUser"
+      },
+      "UpdateUser": {
+        "required": false,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UserUpdate"
+            }
+          }
+        }
+      },
+      "DeleteUser": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Settings": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/v1/users": {
+      "post": {
+        "operationId": "createReferencedUser",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/CreateUserAlias"
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/users/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "patch": {
+        "operationId": "updateReferencedUser",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/UpdateUser"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteReferencedUser",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/DeleteUser"
+        },
+        "responses": {
+          "204": {
+            "description": "User deleted"
+          }
+        }
+      }
+    },
+    "/v1/settings": {
+      "put": {
+        "operationId": "replaceReferencedSettings",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/Settings"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

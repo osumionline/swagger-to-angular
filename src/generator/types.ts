@@ -12,6 +12,7 @@ interface SwaggerComponents {
   schemas?: Record<string, SwaggerSchema>;
   parameters?: Record<string, SwaggerParameterOrReference>;
   responses?: Record<string, SwaggerResponseOrReference>;
+  requestBodies?: Record<string, SwaggerRequestBodyOrReference>;
   pathItems?: Record<string, SwaggerPathItem>;
 }
 
@@ -83,10 +84,27 @@ export type SwaggerParameterOrReference =
 /**
  * Definition of an HTTP request body.
  */
-interface SwaggerRequestBody {
+export interface SwaggerRequestBody {
+  description?: string;
   required?: boolean;
   content?: Record<string, { schema?: SwaggerSchema }>;
 }
+
+/**
+ * OpenAPI reference to a reusable request body definition.
+ */
+export interface SwaggerRequestBodyReference {
+  $ref: string;
+  summary?: string;
+  description?: string;
+}
+
+/**
+ * HTTP request body declared inline or through a reference.
+ */
+export type SwaggerRequestBodyOrReference =
+  | SwaggerRequestBody
+  | SwaggerRequestBodyReference;
 
 /**
  * Definition of an OpenAPI response.
@@ -127,7 +145,7 @@ export interface SwaggerResponseInfo {
 export interface SwaggerOperation {
   operationId?: string;
   parameters?: SwaggerParameterOrReference[];
-  requestBody?: SwaggerRequestBody;
+  requestBody?: SwaggerRequestBodyOrReference;
   responses?: Record<string, SwaggerResponseOrReference>;
 }
 

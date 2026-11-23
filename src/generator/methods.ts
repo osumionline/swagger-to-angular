@@ -9,6 +9,7 @@ import mergeParameters from './parameters.js';
 import resolvePathItem from './path-item-resolver.js';
 import generatePathParameterExpression from './path-serializer.js';
 import generateQueryParameterCode from './query-serializer.js';
+import resolveRequestBodyReference from './request-body-reference-resolver.js';
 import getResponseInfo from './response-info.js';
 import { mapSwaggerSchemaToTs } from './schema-mapper.js';
 import type {
@@ -17,6 +18,8 @@ import type {
   SwaggerParameterOrReference,
   SwaggerPathItem,
   SwaggerPaths,
+  SwaggerRequestBody,
+  SwaggerRequestBodyOrReference,
   SwaggerResponseInfo,
   SwaggerResponseOrReference,
   SwaggerSchema,
@@ -105,6 +108,7 @@ function formatHttpParameterKey(name: string): string {
  * @param parameterDefinitions Reusable parameters from components.parameters.
  * @param pathItemDefinitions Reusable Path Items from components.pathItems.
  * @param responseDefinitions Reusable responses from components.responses.
+ * @param requestBodyDefinitions Reusable request bodies from components.requestBodies.
  * @returns TypeScript source code for the generated service methods.
  */
 export default function generateMethods(
@@ -114,6 +118,7 @@ export default function generateMethods(
   parameterDefinitions: Record<string, SwaggerParameterOrReference> = {},
   pathItemDefinitions: Record<string, SwaggerPathItem> = {},
   responseDefinitions: Record<string, SwaggerResponseOrReference> = {},
+  requestBodyDefinitions: Record<string, SwaggerRequestBodyOrReference> = {},
 ): string {
   const methods: string[] = [];
   const usedMethodNames: Set<string> = new Set<string>();
@@ -333,10 +338,18 @@ export default function generateMethods(
         );
       }
 
-      const requestBodyRequired: boolean = def.requestBody?.required === true;
+      const requestBody: SwaggerRequestBody | undefined =
+        def.requestBody === undefined
+          ? undefined
+          : resolveRequestBodyReference(
+              def.requestBody,
+              requestBodyDefinitions,
+            );
+
+      const requestBodyRequired: boolean = requestBody?.required === true;
 
       const bodySchema: SwaggerSchema | undefined =
-        def.requestBody?.content?.['application/json']?.schema;
+        requestBody?.content?.['application/json']?.schema;
 
       const hasPayload: boolean = bodySchema !== undefined;
 

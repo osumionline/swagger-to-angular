@@ -32,6 +32,7 @@ export default function generate(
     swagger.components?.parameters ?? {},
     swagger.components?.pathItems ?? {},
     swagger.components?.responses ?? {},
+    swagger.components?.requestBodies ?? {},
   );
 
   const fullContent: string = buildFullFile(serviceInfo, interfaces, methods);
