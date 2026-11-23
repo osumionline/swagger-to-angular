@@ -1,0 +1,129 @@
+{
+  "openapi": "3.0.0",
+  "servers": [
+    {
+      "url": "https://example.com/parameterdefinitions"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "ItemId": {
+        "type": "string"
+      },
+      "TagList": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "parameters": {
+      "ItemIdParameter": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/ItemId"
+        }
+      },
+      "ItemIdAlias": {
+        "$ref": "#/components/parameters/ItemIdParameter"
+      },
+      "TagsParameter": {
+        "name": "tags",
+        "in": "query",
+        "style": "form",
+        "explode": false,
+        "schema": {
+          "$ref": "#/components/schemas/TagList"
+        }
+      },
+      "PageParameter": {
+        "name": "page",
+        "in": "query",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "TraceParameter": {
+        "name": "X-Trace",
+        "in": "header",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "SessionParameter": {
+        "name": "sessionId",
+        "in": "cookie",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "paths": {
+    "/v1/items/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ItemIdAlias"
+        },
+        {
+          "$ref": "#/components/parameters/PageParameter"
+        },
+        {
+          "$ref": "#/components/parameters/SessionParameter"
+        }
+      ],
+      "get": {
+        "operationId": "getItemsWithParameterReferences",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TagsParameter"
+          },
+          {
+            "$ref": "#/components/parameters/TraceParameter"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/search": {
+      "parameters": [
+        {
+          "name": "page",
+          "in": "query",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "searchWithParameterOverride",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TagsParameter"
+          }
+        ]
+      }
+    }
+  }
+}

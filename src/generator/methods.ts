@@ -3,6 +3,7 @@ import generateEncodedFormQueryCode from './form-query-serializer.js';
 import generateHeaderParameterCode from './header-serializer.js';
 import createOperationName from './operation-name.js';
 import createParameterName from './parameter-name.js';
+import resolveParameterReference from './parameter-reference-resolver.js';
 import resolveParameterSchema from './parameter-schema-resolver.js';
 import mergeParameters from './parameters.js';
 import generatePathParameterExpression from './path-serializer.js';
@@ -12,6 +13,7 @@ import { mapSwaggerSchemaToTs } from './schema-mapper.js';
 import type {
   SwaggerOperation,
   SwaggerParameter,
+  SwaggerParameterOrReference,
   SwaggerPaths,
   SwaggerResponseInfo,
   SwaggerSchema,
@@ -97,12 +99,14 @@ function formatHttpParameterKey(name: string): string {
  * @param paths Collection of OpenAPI paths and operations.
  * @param basePathName Environment property containing the API base URL.
  * @param schemas Named component schemas for parameter reference resolution.
+ * @param parameterDefinitions Reusable parameters from components.parameters.
  * @returns TypeScript source code for the generated service methods.
  */
 export default function generateMethods(
   paths: SwaggerPaths,
   basePathName: string,
   schemas: Record<string, SwaggerSchema> = {},
+  parameterDefinitions: Record<string, SwaggerParameterOrReference> = {},
 ): string {
   const methods: string[] = [];
   const usedMethodNames: Set<string> = new Set<string>();
@@ -111,7 +115,11 @@ export default function generateMethods(
     const pathParameters: SwaggerParameter[] = Array.isArray(
       pathItem.parameters,
     )
-      ? pathItem.parameters
+      ? pathItem.parameters.map(
+          (parameter: SwaggerParameterOrReference): SwaggerParameter => {
+            return resolveParameterReference(parameter, parameterDefinitions);
+          },
+        )
       : [];
 
     for (const httpMethodRaw of Object.keys(pathItem)) {
@@ -149,7 +157,11 @@ export default function generateMethods(
       const operationParameters: SwaggerParameter[] = Array.isArray(
         def.parameters,
       )
-        ? def.parameters
+        ? def.parameters.map(
+            (parameter: SwaggerParameterOrReference): SwaggerParameter => {
+              return resolveParameterReference(parameter, parameterDefinitions);
+            },
+          )
         : [];
 
       const parameters: SwaggerParameter[] = mergeParameters(

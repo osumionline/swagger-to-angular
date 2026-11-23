@@ -10,6 +10,7 @@ interface SwaggerServer {
  */
 interface SwaggerComponents {
   schemas?: Record<string, SwaggerSchema>;
+  parameters?: Record<string, SwaggerParameterOrReference>;
 }
 
 /**
@@ -64,6 +65,20 @@ export interface SwaggerParameter {
 }
 
 /**
+ * OpenAPI reference to a reusable parameter definition.
+ */
+export interface SwaggerParameterReference {
+  $ref: string;
+}
+
+/**
+ * HTTP parameter declared inline or through a reference.
+ */
+export type SwaggerParameterOrReference =
+  | SwaggerParameter
+  | SwaggerParameterReference;
+
+/**
  * Definition of an HTTP request body.
  */
 interface SwaggerRequestBody {
@@ -93,7 +108,7 @@ export interface SwaggerResponseInfo {
  */
 export interface SwaggerOperation {
   operationId?: string;
-  parameters?: SwaggerParameter[];
+  parameters?: SwaggerParameterOrReference[];
   requestBody?: SwaggerRequestBody;
   responses?: Record<string, SwaggerResponse>;
 }
@@ -107,7 +122,7 @@ export interface SwaggerPathItem {
   summary?: string;
   description?: string;
   servers?: SwaggerServer[];
-  parameters?: SwaggerParameter[];
+  parameters?: SwaggerParameterOrReference[];
 
   get?: SwaggerOperation;
   put?: SwaggerOperation;
