@@ -11,6 +11,7 @@ interface SwaggerServer {
 interface SwaggerComponents {
   schemas?: Record<string, SwaggerSchema>;
   parameters?: Record<string, SwaggerParameterOrReference>;
+  pathItems?: Record<string, SwaggerPathItem>;
 }
 
 /**

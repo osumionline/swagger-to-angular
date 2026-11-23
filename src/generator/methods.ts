@@ -6,6 +6,7 @@ import createParameterName from './parameter-name.js';
 import resolveParameterReference from './parameter-reference-resolver.js';
 import resolveParameterSchema from './parameter-schema-resolver.js';
 import mergeParameters from './parameters.js';
+import resolvePathItem from './path-item-resolver.js';
 import generatePathParameterExpression from './path-serializer.js';
 import generateQueryParameterCode from './query-serializer.js';
 import getResponseInfo from './response-info.js';
@@ -14,6 +15,7 @@ import type {
   SwaggerOperation,
   SwaggerParameter,
   SwaggerParameterOrReference,
+  SwaggerPathItem,
   SwaggerPaths,
   SwaggerResponseInfo,
   SwaggerSchema,
@@ -100,6 +102,7 @@ function formatHttpParameterKey(name: string): string {
  * @param basePathName Environment property containing the API base URL.
  * @param schemas Named component schemas for parameter reference resolution.
  * @param parameterDefinitions Reusable parameters from components.parameters.
+ * @param pathItemDefinitions Reusable Path Items from components.pathItems.
  * @returns TypeScript source code for the generated service methods.
  */
 export default function generateMethods(
@@ -107,11 +110,18 @@ export default function generateMethods(
   basePathName: string,
   schemas: Record<string, SwaggerSchema> = {},
   parameterDefinitions: Record<string, SwaggerParameterOrReference> = {},
+  pathItemDefinitions: Record<string, SwaggerPathItem> = {},
 ): string {
   const methods: string[] = [];
   const usedMethodNames: Set<string> = new Set<string>();
 
-  for (const [rawPath, pathItem] of Object.entries(paths)) {
+  for (const [rawPath, declaredPathItem] of Object.entries(paths)) {
+    const pathItem: SwaggerPathItem = resolvePathItem(
+      declaredPathItem,
+      paths,
+      pathItemDefinitions,
+    );
+
     const pathParameters: SwaggerParameter[] = Array.isArray(
       pathItem.parameters,
     )

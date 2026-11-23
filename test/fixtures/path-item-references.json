@@ -1,0 +1,71 @@
+{
+  "openapi": "3.1.0",
+  "servers": [
+    {
+      "url": "https://example.com/pathitemreferences"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "ItemId": {
+        "type": "string"
+      }
+    },
+    "parameters": {
+      "ItemIdParameter": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/ItemId"
+        }
+      },
+      "PageParameter": {
+        "name": "page",
+        "in": "query",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "pathItems": {
+      "GetItem": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ItemIdParameter"
+          }
+        ],
+        "get": {
+          "operationId": "getItemByPathItem",
+          "parameters": [
+            {
+              "$ref": "#/components/parameters/PageParameter"
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "GetItemAlias": {
+        "$ref": "#/components/pathItems/GetItem"
+      }
+    }
+  },
+  "paths": {
+    "/v1/items/{id}": {
+      "$ref": "#/components/pathItems/GetItemAlias"
+    },
+    "/v1/item-copy/{id}": {
+      "$ref": "#/paths/~1v1~1items~1{id}"
+    }
+  }
+}

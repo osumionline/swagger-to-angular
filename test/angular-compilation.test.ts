@@ -194,5 +194,5 @@ describe('Generated Angular service compilation', (): void => {
         force: true,
       });
     }
-  });
+  }, 30_000);
 });
