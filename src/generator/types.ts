@@ -137,6 +137,8 @@ export type SwaggerResponseOrReference =
 export interface SwaggerResponseInfo {
   returnType: string;
   isBinary: boolean;
+  isText?: boolean;
+  accept?: string;
 }
 
 /**

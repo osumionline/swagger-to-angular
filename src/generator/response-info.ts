@@ -9,20 +9,27 @@ import type {
 } from './types.js';
 
 /**
- * Resolves the TypeScript return type and binary response
- * flag for an OpenAPI operation.
+ * Resolves the TypeScript return type and response media
+ * metadata for an OpenAPI operation.
  *
  * Selects the lowest explicit 2xx response code.
  * Uses the 2XX response range when no explicit success
  * status is available.
  *
- * Responses without a body produce void.
+ * Supported media types are selected in this order:
+ * application/json, application/*+json, text/plain,
+ * application/pdf and application/octet-stream.
+ *
+ * When multiple response media types exist, the selected
+ * type is also returned as the preferred Accept header.
+ *
+ * Responses without content produce void.
  * Operations without a documented success response
  * retain the any fallback for compatibility.
  *
  * @param operation OpenAPI operation definition.
  * @param responseDefinitions Reusable responses from components.responses.
- * @returns Return type and binary response metadata.
+ * @returns Return type and response media metadata.
  */
 export default function getResponseInfo(
   operation: SwaggerOperation,
@@ -83,31 +90,55 @@ export default function getResponseInfo(
     };
   }
 
-  const contentType: string = mediaTypes[0] ?? '';
+  const jsonMediaType: string | undefined =
+    mediaTypes.find((mediaType: string): boolean => {
+      return mediaType === 'application/json';
+    }) ??
+    mediaTypes.find((mediaType: string): boolean => {
+      return /^application\/[a-z0-9!#$&^_.+-]+\+json$/i.test(mediaType);
+    });
 
-  const isBinary: boolean =
-    contentType === 'application/pdf' ||
-    contentType === 'application/octet-stream';
+  const selectedMediaType: string | undefined =
+    jsonMediaType ??
+    (mediaTypes.includes('text/plain') ? 'text/plain' : undefined) ??
+    (mediaTypes.includes('application/pdf') ? 'application/pdf' : undefined) ??
+    (mediaTypes.includes('application/octet-stream')
+      ? 'application/octet-stream'
+      : undefined);
 
-  if (isBinary) {
-    return {
+  if (selectedMediaType === undefined) {
+    throw new Error(
+      `Unsupported response media types: ${mediaTypes.join(', ')}.`,
+    );
+  }
+
+  let result: SwaggerResponseInfo;
+
+  if (jsonMediaType !== undefined) {
+    const jsonSchema: SwaggerSchema | undefined =
+      content[jsonMediaType]?.schema;
+
+    result = {
+      returnType:
+        jsonSchema === undefined ? 'any' : mapSwaggerSchemaToTs(jsonSchema),
+      isBinary: false,
+    };
+  } else if (selectedMediaType === 'text/plain') {
+    result = {
+      returnType: 'string',
+      isBinary: false,
+      isText: true,
+    };
+  } else {
+    result = {
       returnType: 'ArrayBuffer',
       isBinary: true,
     };
   }
 
-  const jsonSchema: SwaggerSchema | undefined =
-    content['application/json']?.schema;
-
-  if (jsonSchema !== undefined) {
-    return {
-      returnType: mapSwaggerSchemaToTs(jsonSchema),
-      isBinary: false,
-    };
+  if (mediaTypes.length > 1) {
+    result.accept = selectedMediaType;
   }
 
-  return {
-    returnType: 'any',
-    isBinary: false,
-  };
+  return result;
 }

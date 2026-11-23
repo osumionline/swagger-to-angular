@@ -174,6 +174,8 @@ export default function generateMethods(
 
       const returnType: string = responseInfo.returnType;
       const isBinary: boolean = responseInfo.isBinary;
+      const isText: boolean = responseInfo.isText === true;
+      const isNonJsonResponse: boolean = isBinary || isText;
 
       const operationParameters: SwaggerParameter[] = Array.isArray(
         def.parameters,
@@ -369,6 +371,12 @@ export default function generateMethods(
 
       const url: string = `\${this.${basePathName}}${interpolatedPath}`;
 
+      if (responseInfo.accept !== undefined) {
+        headerParamSets.push(
+          `    headers['Accept'] = ${JSON.stringify(responseInfo.accept)};`,
+        );
+      }
+
       const hasQuery: boolean = queryParamSets.length > 0;
       const hasHeaders: boolean = headerParamSets.length > 0;
 
@@ -407,6 +415,8 @@ export default function generateMethods(
 
       if (isBinary) {
         optionsParts.push("responseType: 'arraybuffer' as const");
+      } else if (isText) {
+        optionsParts.push("responseType: 'text' as const");
       }
 
       if (hasCookieParameters) {
@@ -433,7 +443,7 @@ export default function generateMethods(
         httpMethod === 'head' ||
         httpMethod === 'options'
       ) {
-        if (isBinary) {
+        if (isNonJsonResponse) {
           httpCall = `.${httpMethod}(${urlArgument}, ${optionsArg})`;
         } else {
           httpCall =
@@ -446,14 +456,14 @@ export default function generateMethods(
               ? '{ body: payload, ...options }'
               : '{ body: payload }';
 
-          if (isBinary) {
+          if (isNonJsonResponse) {
             httpCall = `.delete(${urlArgument}, ${deleteOptions})`;
           } else {
             httpCall =
               `.delete<${returnType}>` + `(${urlArgument}, ${deleteOptions})`;
           }
         } else {
-          if (isBinary) {
+          if (isNonJsonResponse) {
             httpCall = `.delete(${urlArgument}, ${optionsArg})`;
           } else {
             httpCall =
@@ -465,7 +475,7 @@ export default function generateMethods(
 
         const httpArguments: string = `${urlArgument}, ${requestBodyArgument}${optionsArg}`;
 
-        if (isBinary) {
+        if (isNonJsonResponse) {
           httpCall = `.${httpMethod}(${httpArguments})`;
         } else {
           httpCall = `.${httpMethod}<${returnType}>(${httpArguments})`;
