@@ -1,0 +1,79 @@
+{
+  "openapi": "3.1.0",
+  "servers": [{ "url": "https://example.com/responsereferences" }],
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "integer" }
+        }
+      }
+    },
+    "responses": {
+      "UserResponse": {
+        "description": "User",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/User" }
+          }
+        }
+      },
+      "UserAlias": { "$ref": "#/components/responses/UserResponse" },
+      "Report": {
+        "description": "Download",
+        "content": {
+          "application/pdf": {
+            "schema": { "type": "string" }
+          }
+        }
+      },
+      "Empty": { "description": "No content" },
+      "Collection": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/User" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/v1/user": {
+      "get": {
+        "operationId": "getReferencedUser",
+        "responses": {
+          "200": { "$ref": "#/components/responses/UserAlias" }
+        }
+      }
+    },
+    "/v1/report": {
+      "get": {
+        "operationId": "downloadReferencedReport",
+        "responses": {
+          "201": { "$ref": "#/components/responses/Report" }
+        }
+      }
+    },
+    "/v1/user/remove": {
+      "delete": {
+        "operationId": "removeReferencedUser",
+        "responses": {
+          "204": { "$ref": "#/components/responses/Empty" }
+        }
+      }
+    },
+    "/v1/collection": {
+      "get": {
+        "operationId": "listReferencedUsers",
+        "responses": {
+          "2XX": { "$ref": "#/components/responses/Collection" }
+        }
+      }
+    }
+  }
+}

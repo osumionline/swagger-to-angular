@@ -1,8 +1,10 @@
+import resolveResponseReference from './response-reference-resolver.js';
 import { mapSwaggerSchemaToTs } from './schema-mapper.js';
 import type {
   SwaggerOperation,
   SwaggerResponse,
   SwaggerResponseInfo,
+  SwaggerResponseOrReference,
   SwaggerSchema,
 } from './types.js';
 
@@ -19,12 +21,15 @@ import type {
  * retain the any fallback for compatibility.
  *
  * @param operation OpenAPI operation definition.
+ * @param responseDefinitions Reusable responses from components.responses.
  * @returns Return type and binary response metadata.
  */
 export default function getResponseInfo(
   operation: SwaggerOperation,
+  responseDefinitions: Record<string, SwaggerResponseOrReference> = {},
 ): SwaggerResponseInfo {
-  const responses: Record<string, SwaggerResponse> = operation.responses ?? {};
+  const responses: Record<string, SwaggerResponseOrReference> =
+    operation.responses ?? {};
 
   const successCodes: string[] = Object.keys(responses)
     .filter((statusCode: string): boolean => {
@@ -51,10 +56,23 @@ export default function getResponseInfo(
     };
   }
 
-  const response: SwaggerResponse | undefined = responses[selectedStatus];
+  const selectedResponse: SwaggerResponseOrReference | undefined =
+    responses[selectedStatus];
+
+  if (selectedResponse === undefined) {
+    return {
+      returnType: 'any',
+      isBinary: false,
+    };
+  }
+
+  const response: SwaggerResponse = resolveResponseReference(
+    selectedResponse,
+    responseDefinitions,
+  );
 
   const content: Record<string, { schema?: SwaggerSchema }> =
-    response?.content ?? {};
+    response.content ?? {};
 
   const mediaTypes: string[] = Object.keys(content);
 

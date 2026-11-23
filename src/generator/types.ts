@@ -11,6 +11,7 @@ interface SwaggerServer {
 interface SwaggerComponents {
   schemas?: Record<string, SwaggerSchema>;
   parameters?: Record<string, SwaggerParameterOrReference>;
+  responses?: Record<string, SwaggerResponseOrReference>;
   pathItems?: Record<string, SwaggerPathItem>;
 }
 
@@ -96,6 +97,22 @@ export interface SwaggerResponse {
 }
 
 /**
+ * OpenAPI reference to a reusable response definition.
+ */
+export interface SwaggerResponseReference {
+  $ref: string;
+  summary?: string;
+  description?: string;
+}
+
+/**
+ * HTTP response declared inline or through a reference.
+ */
+export type SwaggerResponseOrReference =
+  | SwaggerResponse
+  | SwaggerResponseReference;
+
+/**
  * Resolved TypeScript information for a successful
  * OpenAPI response.
  */
@@ -111,7 +128,7 @@ export interface SwaggerOperation {
   operationId?: string;
   parameters?: SwaggerParameterOrReference[];
   requestBody?: SwaggerRequestBody;
-  responses?: Record<string, SwaggerResponse>;
+  responses?: Record<string, SwaggerResponseOrReference>;
 }
 
 /**

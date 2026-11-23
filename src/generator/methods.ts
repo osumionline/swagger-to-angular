@@ -18,6 +18,7 @@ import type {
   SwaggerPathItem,
   SwaggerPaths,
   SwaggerResponseInfo,
+  SwaggerResponseOrReference,
   SwaggerSchema,
 } from './types.js';
 
@@ -103,6 +104,7 @@ function formatHttpParameterKey(name: string): string {
  * @param schemas Named component schemas for parameter reference resolution.
  * @param parameterDefinitions Reusable parameters from components.parameters.
  * @param pathItemDefinitions Reusable Path Items from components.pathItems.
+ * @param responseDefinitions Reusable responses from components.responses.
  * @returns TypeScript source code for the generated service methods.
  */
 export default function generateMethods(
@@ -111,6 +113,7 @@ export default function generateMethods(
   schemas: Record<string, SwaggerSchema> = {},
   parameterDefinitions: Record<string, SwaggerParameterOrReference> = {},
   pathItemDefinitions: Record<string, SwaggerPathItem> = {},
+  responseDefinitions: Record<string, SwaggerResponseOrReference> = {},
 ): string {
   const methods: string[] = [];
   const usedMethodNames: Set<string> = new Set<string>();
@@ -159,7 +162,10 @@ export default function generateMethods(
         .replace(/\*\//g, '* /')
         .replace(/[\r\n\u2028\u2029]/g, ' ');
 
-      const responseInfo: SwaggerResponseInfo = getResponseInfo(def);
+      const responseInfo: SwaggerResponseInfo = getResponseInfo(
+        def,
+        responseDefinitions,
+      );
 
       const returnType: string = responseInfo.returnType;
       const isBinary: boolean = responseInfo.isBinary;
