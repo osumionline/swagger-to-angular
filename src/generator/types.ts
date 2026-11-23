@@ -107,6 +107,14 @@ export type SwaggerRequestBodyOrReference =
   | SwaggerRequestBodyReference;
 
 /**
+ * Selected request body representation for an HTTP operation.
+ */
+export interface SwaggerRequestBodyInfo {
+  payloadType: string;
+  contentType?: string;
+}
+
+/**
  * Definition of an OpenAPI response.
  */
 export interface SwaggerResponse {

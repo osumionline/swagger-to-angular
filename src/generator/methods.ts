@@ -9,6 +9,7 @@ import mergeParameters from './parameters.js';
 import resolvePathItem from './path-item-resolver.js';
 import generatePathParameterExpression from './path-serializer.js';
 import generateQueryParameterCode from './query-serializer.js';
+import getRequestBodyInfo from './request-body-info.js';
 import resolveRequestBodyReference from './request-body-reference-resolver.js';
 import getResponseInfo from './response-info.js';
 import { mapSwaggerSchemaToTs } from './schema-mapper.js';
@@ -19,6 +20,7 @@ import type {
   SwaggerPathItem,
   SwaggerPaths,
   SwaggerRequestBody,
+  SwaggerRequestBodyInfo,
   SwaggerRequestBodyOrReference,
   SwaggerResponseInfo,
   SwaggerResponseOrReference,
@@ -348,17 +350,28 @@ export default function generateMethods(
               requestBodyDefinitions,
             );
 
+      if (
+        requestBody !== undefined &&
+        (httpMethod === 'get' ||
+          httpMethod === 'head' ||
+          httpMethod === 'options')
+      ) {
+        throw new Error(
+          `Unsupported request body for HTTP ${httpMethod.toUpperCase()} ` +
+            `operation "${operationId}".`,
+        );
+      }
+
+      const requestBodyInfo: SwaggerRequestBodyInfo | undefined =
+        getRequestBodyInfo(requestBody, operationId);
+
       const requestBodyRequired: boolean = requestBody?.required === true;
+      const hasPayload: boolean = requestBodyInfo !== undefined;
 
-      const bodySchema: SwaggerSchema | undefined =
-        requestBody?.content?.['application/json']?.schema;
-
-      const hasPayload: boolean = bodySchema !== undefined;
-
-      if (bodySchema !== undefined) {
-        const bodyType: string = mapSwaggerSchemaToTs(bodySchema);
-
-        const argument: string = `payload${requestBodyRequired ? '' : '?'}: ${bodyType}`;
+      if (requestBodyInfo !== undefined) {
+        const argument: string =
+          `payload${requestBodyRequired ? '' : '?'}: ` +
+          requestBodyInfo.payloadType;
 
         if (requestBodyRequired) {
           requiredArgs.push(argument);
@@ -370,6 +383,12 @@ export default function generateMethods(
       const argsList: string[] = [...requiredArgs, ...optionalArgs];
 
       const url: string = `\${this.${basePathName}}${interpolatedPath}`;
+
+      if (requestBodyInfo?.contentType !== undefined) {
+        headerParamSets.push(
+          `    headers['Content-Type'] = ${JSON.stringify(requestBodyInfo.contentType)};`,
+        );
+      }
 
       if (responseInfo.accept !== undefined) {
         headerParamSets.push(

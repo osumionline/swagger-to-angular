@@ -1,0 +1,154 @@
+{
+  "openapi": "3.1.0",
+  "servers": [
+    {
+      "url": "https://example.com/requestbodymediatypes"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "UserInput": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": { "type": "string" },
+          "name": { "type": "string" }
+        }
+      }
+    },
+    "requestBodies": {
+      "VendorBody": {
+        "required": true,
+        "content": {
+          "application/vnd.api+json": {
+            "schema": {
+              "$ref": "#/components/schemas/UserInput"
+            }
+          }
+        }
+      },
+      "TextBody": {
+        "required": false,
+        "content": {
+          "text/plain": {
+            "schema": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/v1/users": {
+      "post": {
+        "operationId": "createVendorUser",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/VendorBody"
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/message": {
+      "post": {
+        "operationId": "sendPlainMessage",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/TextBody"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {}
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deletePlainMessage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": { "type": "string" }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Message deleted"
+          }
+        }
+      }
+    },
+    "/v1/update": {
+      "patch": {
+        "operationId": "updateMergePatch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/merge-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {},
+              "application/json": {
+                "schema": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/multiple": {
+      "put": {
+        "operationId": "sendMultipleFormats",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "text/plain": {},
+            "application/json": {
+              "schema": { "type": "integer" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/raw": {
+      "post": {
+        "operationId": "sendRawJson",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {}
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          }
+        }
+      }
+    }
+  }
+}
