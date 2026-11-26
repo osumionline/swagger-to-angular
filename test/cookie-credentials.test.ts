@@ -331,7 +331,7 @@ describe('Browser-managed OpenAPI cookie parameters', (): void => {
     expect(content).toContain('withCredentials: true');
 
     expect(content).toContain(
-      '.post<any>(`${this.basePathApi}/v1/items`, payload, options)',
+      '.post<any>(`${this.basePathApi}/v1/items`, JSON.stringify(payload), options)',
     );
   });
 

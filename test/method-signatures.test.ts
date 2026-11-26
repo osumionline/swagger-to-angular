@@ -50,7 +50,7 @@ describe('generateMethods parameter signatures', (): void => {
     expect(content).toContain("params = params.set('search', String(search));");
 
     expect(content).toContain(
-      '.post<boolean>(`${this.basePathApi}/v1/users`, payload, options)',
+      '.post<boolean>(`${this.basePathApi}/v1/users`, JSON.stringify(payload), options)',
     );
   });
 
@@ -204,7 +204,7 @@ describe('generateMethods parameter signatures', (): void => {
     );
 
     expect(content).toContain(
-      '.patch<boolean>(`${this.basePathApi}/v1/settings`, payload, options)',
+      '.patch<boolean>(`${this.basePathApi}/v1/settings`, JSON.stringify(payload), options)',
     );
   });
 

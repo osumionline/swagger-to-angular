@@ -203,11 +203,11 @@ describe('generateMethods HTTP requests', (): void => {
     const content: string = generateMethods(paths, 'basePathApi');
 
     expect(content).toContain(
-      '.put<boolean>(`${this.basePathApi}/v1/profile`, payload, {})',
+      '.put<boolean>(`${this.basePathApi}/v1/profile`, JSON.stringify(payload), options)',
     );
 
     expect(content).toContain(
-      '.patch<boolean>(`${this.basePathApi}/v1/profile`, payload, {})',
+      '.patch<boolean>(`${this.basePathApi}/v1/profile`, JSON.stringify(payload), options)',
     );
   });
 
@@ -281,7 +281,7 @@ describe('generateMethods HTTP requests', (): void => {
     const content: string = generateMethods(paths, 'basePathApi');
 
     expect(content).toContain(
-      '.delete<boolean>(`${this.basePathApi}/v1/items`, { body: payload })',
+      '.delete<boolean>(`${this.basePathApi}/v1/items`, { body: JSON.stringify(payload), ...options })',
     );
   });
 });

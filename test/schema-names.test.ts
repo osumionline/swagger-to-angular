@@ -220,7 +220,7 @@ describe('OpenAPI schema names and references', (): void => {
     );
 
     expect(content).toContain(
-      '.post<OpenApiSchema_Order_2e_Item>(`${this.basePathApi}/v1/users`, payload, {})',
+      '.post<OpenApiSchema_Order_2e_Item>(`${this.basePathApi}/v1/users`, JSON.stringify(payload), options)',
     );
   });
 });

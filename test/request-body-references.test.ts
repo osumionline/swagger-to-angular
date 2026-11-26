@@ -83,7 +83,7 @@ describe('OpenAPI components.requestBodies references', (): void => {
     );
 
     expect(content).toContain(
-      '.post<boolean>(`${this.basePathApi}/v1/users`, payload, {})',
+      '.post<boolean>(`${this.basePathApi}/v1/users`, JSON.stringify(payload), options)',
     );
   });
 
@@ -115,7 +115,7 @@ describe('OpenAPI components.requestBodies references', (): void => {
     expect(content).toContain('searchUsers(payload?: string): Observable<any>');
 
     expect(content).toContain(
-      '.post<any>(`${this.basePathApi}/v1/search`, payload, {})',
+      '.post<any>(`${this.basePathApi}/v1/search`, JSON.stringify(payload), options)',
     );
   });
 
@@ -271,7 +271,7 @@ describe('OpenAPI components.requestBodies references', (): void => {
     expect(content).toContain("params = params.set('force', String(force));");
 
     expect(content).toContain(
-      '.delete<boolean>(`${this.basePathApi}/v1/users/${encodeURIComponent(String(id))}`, { body: payload, ...options })',
+      '.delete<boolean>(`${this.basePathApi}/v1/users/${encodeURIComponent(String(id))}`, { body: JSON.stringify(payload), ...options })',
     );
   });
 

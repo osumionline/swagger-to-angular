@@ -242,7 +242,7 @@ describe('OpenAPI response media types', (): void => {
     expect(content).toContain("responseType: 'text' as const");
 
     expect(content).toContain(
-      '.post(`${this.basePathApi}/v1/message`, payload, options)',
+      '.post(`${this.basePathApi}/v1/message`, JSON.stringify(payload), options)',
     );
   });
 
@@ -277,7 +277,7 @@ describe('OpenAPI response media types', (): void => {
     expect(content).toContain("responseType: 'text' as const");
 
     expect(content).toContain(
-      '.delete(`${this.basePathApi}/v1/message`, { body: payload, ...options })',
+      '.delete(`${this.basePathApi}/v1/message`, { body: JSON.stringify(payload), ...options })',
     );
   });
 

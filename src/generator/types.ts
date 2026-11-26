@@ -113,6 +113,7 @@ export type SwaggerRequestBodyOrReference =
 export interface SwaggerRequestBodyInfo {
   payloadType: string;
   contentType?: string;
+  serializeAsJson?: boolean;
 }
 
 /**

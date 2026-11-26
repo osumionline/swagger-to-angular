@@ -144,7 +144,11 @@ describe('OpenAPI request body media types', (): void => {
     expect(content).toContain('sendData(payload: unknown): Observable<any>');
 
     expect(content).toContain(
-      '.post<any>(`${this.basePathApi}/v1/data`, payload, {})',
+      '.post<any>(`${this.basePathApi}/v1/data`, JSON.stringify(payload), options)',
+    );
+
+    expect(content).toContain(
+      'headers[\'Content-Type\'] = "application/json";',
     );
   });
 

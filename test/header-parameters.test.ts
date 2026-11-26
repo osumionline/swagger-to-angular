@@ -303,7 +303,7 @@ describe('OpenAPI header parameters', (): void => {
     );
 
     expect(content).toContain(
-      '.post<boolean>(`${this.basePathApi}/v1/items`, payload, options)',
+      '.post<boolean>(`${this.basePathApi}/v1/items`, JSON.stringify(payload), options)',
     );
   });
 

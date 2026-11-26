@@ -21,8 +21,10 @@ import type {
  *
  * Content-Type is explicit for nonstandard JSON, plain
  * text and request bodies with multiple representations.
- * A single application/json representation retains
- * the existing generated output.
+ * A single application/json representation normally
+ * retains the existing generated output. JSON bodies
+ * that may contain strings, null or unknown values
+ * require explicit serialization and Content-Type.
  *
  * @param requestBody Resolved OpenAPI request body, if present.
  * @param operationId Identifier used in error messages.
@@ -107,6 +109,27 @@ export default function getRequestBodyInfo(
   } else {
     payloadType =
       schema === undefined ? 'unknown' : mapSwaggerSchemaToTs(schema);
+  }
+
+  const needsExplicitJsonSerialization: boolean =
+    jsonMediaType !== undefined &&
+    (schema?.type === undefined ||
+      schema?.type === 'string' ||
+      schema?.nullable === true ||
+      schema?.oneOf !== undefined ||
+      schema?.anyOf !== undefined ||
+      schema?.allOf !== undefined ||
+      (schema?.enum?.some((value: unknown): boolean => {
+        return typeof value === 'string' || value === null;
+      }) ??
+        false));
+
+  if (needsExplicitJsonSerialization) {
+    return {
+      payloadType,
+      contentType: selectedMediaType,
+      serializeAsJson: true,
+    };
   }
 
   if (selectedMediaType !== 'application/json' || mediaTypes.length > 1) {

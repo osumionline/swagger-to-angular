@@ -368,6 +368,11 @@ export default function generateMethods(
       const requestBodyRequired: boolean = requestBody?.required === true;
       const hasPayload: boolean = requestBodyInfo !== undefined;
 
+      const payloadExpression: string =
+        requestBodyInfo?.serializeAsJson === true
+          ? 'JSON.stringify(payload)'
+          : 'payload';
+
       if (requestBodyInfo !== undefined) {
         const argument: string =
           `payload${requestBodyRequired ? '' : '?'}: ` +
@@ -472,8 +477,8 @@ export default function generateMethods(
         if (hasPayload) {
           const deleteOptions: string =
             optionsParts.length > 0
-              ? '{ body: payload, ...options }'
-              : '{ body: payload }';
+              ? `{ body: ${payloadExpression}, ...options }`
+              : `{ body: ${payloadExpression} }`;
 
           if (isNonJsonResponse) {
             httpCall = `.delete(${urlArgument}, ${deleteOptions})`;
@@ -490,7 +495,9 @@ export default function generateMethods(
           }
         }
       } else {
-        const requestBodyArgument: string = hasPayload ? 'payload, ' : 'null, ';
+        const requestBodyArgument: string = hasPayload
+          ? `${payloadExpression}, `
+          : 'null, ';
 
         const httpArguments: string = `${urlArgument}, ${requestBodyArgument}${optionsArg}`;
 
