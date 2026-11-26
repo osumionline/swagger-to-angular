@@ -31,6 +31,7 @@ export interface SwaggerDoc {
 export interface SwaggerSchema {
   $ref?: string;
   type?: string;
+  format?: string;
   properties?: Record<string, SwaggerSchema>;
   items?: SwaggerSchema;
   required?: string[];

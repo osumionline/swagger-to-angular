@@ -13,6 +13,7 @@ import type {
  * - application/json
  * - application/*+json
  * - text/plain
+ * - application/octet-stream
  *
  * JSON payload types are inferred from their schemas.
  * Text payloads must use a string schema when one exists.
@@ -50,7 +51,10 @@ export default function getRequestBodyInfo(
 
   const selectedMediaType: string | undefined =
     jsonMediaType ??
-    (mediaTypes.includes('text/plain') ? 'text/plain' : undefined);
+    (mediaTypes.includes('text/plain') ? 'text/plain' : undefined) ??
+    (mediaTypes.includes('application/octet-stream')
+      ? 'application/octet-stream'
+      : undefined);
 
   if (selectedMediaType === undefined) {
     const declaredTypes: string =
@@ -66,7 +70,24 @@ export default function getRequestBodyInfo(
 
   let payloadType: string;
 
-  if (selectedMediaType === 'text/plain') {
+  if (selectedMediaType === 'application/octet-stream') {
+    if (
+      schema !== undefined &&
+      (schema.type !== 'string' ||
+        schema.format !== 'binary' ||
+        schema.$ref !== undefined ||
+        schema.nullable === true ||
+        schema.oneOf !== undefined ||
+        schema.anyOf !== undefined ||
+        schema.allOf !== undefined)
+    ) {
+      throw new Error(
+        `Unsupported application/octet-stream request body schema for "${operationId}".`,
+      );
+    }
+
+    payloadType = 'Blob';
+  } else if (selectedMediaType === 'text/plain') {
     if (
       schema !== undefined &&
       (schema.type !== 'string' ||
