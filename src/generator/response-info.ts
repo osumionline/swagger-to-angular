@@ -1,3 +1,4 @@
+import selectMediaType from './media-type.js';
 import resolveResponseReference from './response-reference-resolver.js';
 import { mapSwaggerSchemaToTs } from './schema-mapper.js';
 import type {
@@ -17,8 +18,13 @@ import type {
  * status is available.
  *
  * Supported media types are selected in this order:
- * application/json, application/*+json, text/plain,
- * application/pdf and application/octet-stream.
+ * - application/json
+ * - application/<subtype>+json
+ * - text/json
+ * - text/plain
+ * - application/octet-stream
+ *
+ * Media type parameters are supported and preserved.
  *
  * When multiple response media types exist, the selected
  * type is also returned as the preferred Accept header.
@@ -90,21 +96,7 @@ export default function getResponseInfo(
     };
   }
 
-  const jsonMediaType: string | undefined =
-    mediaTypes.find((mediaType: string): boolean => {
-      return mediaType === 'application/json';
-    }) ??
-    mediaTypes.find((mediaType: string): boolean => {
-      return /^application\/[a-z0-9!#$&^_.+-]+\+json$/i.test(mediaType);
-    });
-
-  const selectedMediaType: string | undefined =
-    jsonMediaType ??
-    (mediaTypes.includes('text/plain') ? 'text/plain' : undefined) ??
-    (mediaTypes.includes('application/pdf') ? 'application/pdf' : undefined) ??
-    (mediaTypes.includes('application/octet-stream')
-      ? 'application/octet-stream'
-      : undefined);
+  const selectedMediaType = selectMediaType(mediaTypes, 'response');
 
   if (selectedMediaType === undefined) {
     throw new Error(
@@ -114,16 +106,16 @@ export default function getResponseInfo(
 
   let result: SwaggerResponseInfo;
 
-  if (jsonMediaType !== undefined) {
+  if (selectedMediaType.kind === 'json') {
     const jsonSchema: SwaggerSchema | undefined =
-      content[jsonMediaType]?.schema;
+      content[selectedMediaType.name]?.schema;
 
     result = {
       returnType:
         jsonSchema === undefined ? 'any' : mapSwaggerSchemaToTs(jsonSchema),
       isBinary: false,
     };
-  } else if (selectedMediaType === 'text/plain') {
+  } else if (selectedMediaType.kind === 'text') {
     result = {
       returnType: 'string',
       isBinary: false,
@@ -137,7 +129,7 @@ export default function getResponseInfo(
   }
 
   if (mediaTypes.length > 1) {
-    result.accept = selectedMediaType;
+    result.accept = selectedMediaType.name;
   }
 
   return result;

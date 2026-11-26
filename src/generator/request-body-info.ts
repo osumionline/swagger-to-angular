@@ -1,5 +1,5 @@
+import selectMediaType from './media-type.js';
 import { mapSwaggerSchemaToTs } from './schema-mapper.js';
-
 import type {
   SwaggerRequestBody,
   SwaggerRequestBodyInfo,
@@ -11,9 +11,12 @@ import type {
  *
  * Preference order:
  * - application/json
- * - application/*+json
+ * - application/<subtype>+json
+ * - text/json
  * - text/plain
  * - application/octet-stream
+ *
+ * Media type parameters are supported and preserved.
  *
  * JSON payload types are inferred from their schemas.
  * Text payloads must use a string schema when one exists.
@@ -43,20 +46,7 @@ export default function getRequestBodyInfo(
 
   const mediaTypes: string[] = Object.keys(content);
 
-  const jsonMediaType: string | undefined =
-    mediaTypes.find((mediaType: string): boolean => {
-      return mediaType === 'application/json';
-    }) ??
-    mediaTypes.find((mediaType: string): boolean => {
-      return /^application\/[a-z0-9!#$&^_.+-]+\+json$/i.test(mediaType);
-    });
-
-  const selectedMediaType: string | undefined =
-    jsonMediaType ??
-    (mediaTypes.includes('text/plain') ? 'text/plain' : undefined) ??
-    (mediaTypes.includes('application/octet-stream')
-      ? 'application/octet-stream'
-      : undefined);
+  const selectedMediaType = selectMediaType(mediaTypes, 'request');
 
   if (selectedMediaType === undefined) {
     const declaredTypes: string =
@@ -68,11 +58,12 @@ export default function getRequestBodyInfo(
     );
   }
 
-  const schema: SwaggerSchema | undefined = content[selectedMediaType]?.schema;
+  const schema: SwaggerSchema | undefined =
+    content[selectedMediaType.name]?.schema;
 
   let payloadType: string;
 
-  if (selectedMediaType === 'application/octet-stream') {
+  if (selectedMediaType.kind === 'binary') {
     if (
       schema !== undefined &&
       (schema.type !== 'string' ||
@@ -89,7 +80,7 @@ export default function getRequestBodyInfo(
     }
 
     payloadType = 'Blob';
-  } else if (selectedMediaType === 'text/plain') {
+  } else if (selectedMediaType.kind === 'text') {
     if (
       schema !== undefined &&
       (schema.type !== 'string' ||
@@ -112,7 +103,7 @@ export default function getRequestBodyInfo(
   }
 
   const needsExplicitJsonSerialization: boolean =
-    jsonMediaType !== undefined &&
+    selectedMediaType.kind === 'json' &&
     (schema?.type === undefined ||
       schema?.type === 'string' ||
       schema?.nullable === true ||
@@ -127,15 +118,15 @@ export default function getRequestBodyInfo(
   if (needsExplicitJsonSerialization) {
     return {
       payloadType,
-      contentType: selectedMediaType,
+      contentType: selectedMediaType.name,
       serializeAsJson: true,
     };
   }
 
-  if (selectedMediaType !== 'application/json' || mediaTypes.length > 1) {
+  if (selectedMediaType.name !== 'application/json' || mediaTypes.length > 1) {
     return {
       payloadType,
-      contentType: selectedMediaType,
+      contentType: selectedMediaType.name,
     };
   }
 
